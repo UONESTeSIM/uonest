@@ -104,7 +104,7 @@ git push origin v1.0.1
 
 ## 构建环境与排错
 
-工作流使用 Ubuntu 24.04、Temurin JDK 21、Android SDK 37、Build Tools 37.0.0 和 NDK 26.1.10909125，使用仓库的 Gradle Wrapper。Android 组件需可从 SDK 仓库下载。第三方 Actions 固定到已核实的提交 SHA。
+工作流使用 Ubuntu 24.04、Temurin JDK 21、Android SDK 37.0（SDK 包名为 `platforms;android-37.0`）、Build Tools 37.0.0 和 NDK 26.1.10909125，使用仓库的 Gradle Wrapper。Android 组件需可从 SDK 仓库下载。第三方 Actions 固定到已核实的提交 SHA。
 
 - `Missing Actions Secrets`：检查上述 6 个名称和值。
 - 签名失败：检查密钥库、密码和别名；不会输出包含签名输入的原始错误日志。

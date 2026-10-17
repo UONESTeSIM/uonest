@@ -52,8 +52,8 @@ jobs:
         run: |
           set -euo pipefail
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          { yes || :; } | "$sdkmanager" --licenses > /dev/null
-          "$sdkmanager" 'platforms;android-37' 'build-tools;37.0.0' 'ndk;26.1.10909125'
+          { yes 2>/dev/null || :; } | "$sdkmanager" --licenses > /dev/null
+          "$sdkmanager" 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;26.1.10909125'
 
       - name: Apply native profile-owner support
         run: bash tools/ci/apply_lpac_patch.sh

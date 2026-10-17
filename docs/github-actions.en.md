@@ -104,7 +104,7 @@ The script also checks the package name and both version fields before signing, 
 
 ## Environment and troubleshooting
 
-CI uses Ubuntu 24.04, Temurin JDK 21, Android SDK 37, Build Tools 37.0.0, NDK 26.1.10909125, and the repository's Gradle Wrapper. Android components must be available from the SDK repository. Third-party Actions are pinned to verified commit SHAs.
+CI uses Ubuntu 24.04, Temurin JDK 21, Android SDK 37.0 (SDK package `platforms;android-37.0`), Build Tools 37.0.0, NDK 26.1.10909125, and the repository's Gradle Wrapper. Android components must be available from the SDK repository. Third-party Actions are pinned to verified commit SHAs.
 
 - Missing Secrets: check all six names and values.
 - Signing failure: check stores, passwords, and aliases. Raw errors that could echo signing inputs are not logged.
