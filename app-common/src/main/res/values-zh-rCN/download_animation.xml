@@ -1,0 +1,5 @@
+<resources>
+    <string name="download_diagnostics_information">诊断信息</string>
+    <string name="download_animation_success">eSIM 下载完成</string>
+    <string name="download_animation_done">完成</string>
+</resources>

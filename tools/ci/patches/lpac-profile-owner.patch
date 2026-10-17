@@ -1,0 +1,47 @@
+diff --git a/euicc/es10c.c b/euicc/es10c.c
+index 4a665fe..6bd8b1d 100644
+--- a/euicc/es10c.c
++++ b/euicc/es10c.c
+@@ -143,11 +143,31 @@ int es10c_get_profiles_info(struct euicc_ctx *ctx, struct es10c_profile_info_lis
+                 }
+                 break;
+             case 0xB6:
+-            case 0xB7:
+             case 0xB8:
+             case 0x99:
+                 euicc_apdu_unhandled_tag_print(ctx->apdu.log_fp, &tmpnode);
+                 break;
++            case 0xB7: {
++                // OperatorId uses ASN.1 AUTOMATIC TAGS: PLMN=80, GID1=81, GID2=82.
++                struct euicc_derutil_node owner = {0};
++                char **fields[] = {&p->profileOwner.mccmnc, &p->profileOwner.gid1,
++                                  &p->profileOwner.gid2};
++                owner.self.ptr = tmpnode.value;
++                while (euicc_derutil_unpack_next(&owner, &owner, tmpnode.value, tmpnode.length) == 0) {
++                    if (owner.tag < 0x80 || owner.tag > 0x82)
++                        continue;
++                    unsigned i = owner.tag - 0x80;
++                    if (i == 0 && owner.length != 3)
++                        continue;
++                    char *value = malloc(owner.length * 2 + 1);
++                    if (value) {
++                        euicc_hexutil_bin2hex(value, owner.length * 2 + 1, owner.value, owner.length);
++                        free(*fields[i]);
++                        *fields[i] = value;
++                    }
++                }
++                break;
++            }
+             }
+         }
+ 
+@@ -445,6 +465,9 @@ void es10c_profile_info_list_free_all(struct es10c_profile_info_list *profileInf
+         free(profileInfoList->serviceProviderName);
+         free(profileInfoList->profileName);
+         free(profileInfoList->icon);
++        free(profileInfoList->profileOwner.mccmnc);
++        free(profileInfoList->profileOwner.gid1);
++        free(profileInfoList->profileOwner.gid2);
+         free(profileInfoList);
+         profileInfoList = next;
+     }

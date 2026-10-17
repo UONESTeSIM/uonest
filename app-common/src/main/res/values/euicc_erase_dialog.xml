@@ -1,0 +1,6 @@
+<resources>
+    <item name="euicc_erase_input" type="id" />
+    <string name="euicc_erase_warning">All eSIM profiles on this chip will be deleted. This cannot be undone.</string>
+    <string name="euicc_erase_instruction">Enter the last 8 digits of the EID: %1$s</string>
+    <string name="euicc_erase_input_hint">Last 8 digits of the EID</string>
+</resources>

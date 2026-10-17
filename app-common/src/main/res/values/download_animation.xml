@@ -1,0 +1,7 @@
+<resources>
+    <string name="download_diagnostics_information">Diagnostic information</string>
+    <item type="id" name="download_failure_diagnostics" />
+    <item type="id" name="download_animation" />
+    <string name="download_animation_success">eSIM downloaded successfully</string>
+    <string name="download_animation_done">Done</string>
+</resources>

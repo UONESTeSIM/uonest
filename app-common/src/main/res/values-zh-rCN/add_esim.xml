@@ -1,0 +1,22 @@
+<resources>
+    <string name="download_target_loading">正在读取可用卡槽…</string>
+    <string name="download_target_unavailable">不可用</string>
+    <string name="download_target_none">未检测到可用 eSIM，请检查卡片或返回首页授权读卡器。</string>
+    <string name="add_esim_title">添加 eSIM</string>
+    <string name="add_esim_scan">扫描二维码</string>
+    <string name="add_esim_scan_detail">使用相机扫描运营商提供的二维码</string>
+    <string name="add_esim_image">从图片识别</string>
+    <string name="add_esim_image_detail">选择相册中的二维码图片或截图</string>
+    <string name="add_esim_manual">手动输入激活码</string>
+    <string name="add_esim_expanded">已展开</string>
+    <string name="add_esim_collapsed">已收起</string>
+    <string name="add_esim_manual_detail">输入或粘贴完整的 eSIM 激活码</string>
+    <string name="add_esim_code_hint">LPA:1$服务器地址$激活码</string>
+    <string name="add_esim_next">开始下载</string>
+    <string name="add_esim_demo_notice">演示模式：支持扫码和图片识别，下载仅播放动画。</string>
+    <string name="add_esim_invalid">激活码格式不正确，请检查运营商提供的完整激活码。</string>
+    <string name="add_esim_image_error">未识别到清晰的二维码，请更换图片或手动输入激活码。</string>
+    <string name="add_esim_reading">正在识别二维码…</string>
+    <string name="add_esim_camera_error">无法打开相机，请尝试从图片识别。</string>
+    <string name="download_target_choose">请选择可用的下载卡槽</string>
+</resources>

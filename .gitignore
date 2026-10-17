@@ -1,0 +1,38 @@
+/.gradle
+/captures
+/build
+
+# Configuration files
+
+/keystore.properties
+/local.properties
+
+# macOS
+
+.DS_Store
+
+# Local Android toolchain and verification artifacts
+.local-build/
+
+/artifacts/
+
+# Generated module outputs and signing material
+/*/build/
+/libs/*/build/
+**/.cxx/
+**/.gradle/
+**/__pycache__/
+*.pyc
+*.apk
+*.aab
+*.jks
+*.keystore
+*.p12
+*.pfx
+/release-output/
+/releases/
+
+# Local IDE/cache files and upstream Forgejo workflows
+/.kotlin/
+/.idea/
+/.forgejo/

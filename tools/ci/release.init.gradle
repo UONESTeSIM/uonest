@@ -1,0 +1,15 @@
+gradle.afterProject { project ->
+    if (project.path == ':app-unpriv') {
+        def version = System.getenv('UONEST_VERSION')
+        def code = System.getenv('UONEST_VERSION_CODE')
+        if (!version || !code) {
+            throw new GradleException('Run tools/ci/prepare_release.py before the release build.')
+        }
+        project.android.defaultConfig.applicationId = 'com.uonest.app'
+        project.android.defaultConfig.versionName = version
+        project.android.defaultConfig.versionCode = Integer.parseInt(code)
+        project.android.defaultConfig.versionNameSuffix = ''
+        // Signing happens separately, after tests and compilation have passed.
+        project.android.buildTypes.release.signingConfig = null
+    }
+}

@@ -1,0 +1,4 @@
+<resources>
+    <item type="id" name="usb_reader_text" />
+    <item type="id" name="usb_grant_permission" />
+</resources>

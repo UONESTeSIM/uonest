@@ -1,0 +1,27 @@
+<resources>
+    <string name="download_target_loading">Reading available slots…</string>
+    <string name="download_target_unavailable">Unavailable</string>
+    <string name="download_target_none">No available eSIM. Please check the card or authorize your reader from the home screen.</string>
+    <string name="add_esim_title">Add eSIM</string>
+    <string name="add_esim_scan">Scan QR code</string>
+    <string name="add_esim_scan_detail">Use the camera to scan your carrier’s QR code</string>
+    <string name="add_esim_image">Choose QR code image</string>
+    <string name="add_esim_image_detail">Read a QR code from a photo or screenshot</string>
+    <string name="add_esim_manual">Enter activation code</string>
+    <string name="add_esim_expanded">Expanded</string>
+    <string name="add_esim_collapsed">Collapsed</string>
+    <string name="add_esim_manual_detail">Type or paste the full activation code</string>
+    <string name="add_esim_code_hint">LPA:1$server.example$activation-code</string>
+    <string name="add_esim_next">Start download</string>
+    <string name="add_esim_demo_notice">Demo mode: scanning and image recognition work; downloads are simulated.</string>
+    <string name="add_esim_invalid">Invalid activation code. Check the complete code from your carrier.</string>
+    <string name="add_esim_image_error">No readable QR code found. Choose a clearer image or enter the code manually.</string>
+    <string name="add_esim_reading">Reading QR code…</string>
+    <string name="add_esim_camera_error">Unable to open the camera. Try choosing an image instead.</string>
+    <item type="id" name="add_esim_scan" />
+    <item type="id" name="add_esim_image" />
+    <item type="id" name="add_esim_manual" />
+    <item type="id" name="add_esim_code" />
+    <item type="id" name="add_esim_next" />
+    <string name="download_target_choose">Select an available download slot.</string>
+</resources>

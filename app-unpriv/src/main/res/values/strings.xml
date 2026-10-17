@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name" translatable="false">uonest</string>
+    <string name="channel_name_format_unpriv">SIM %d</string>
+    <string name="channel_name_format_unpriv_se">SIM %1$d, SE %2$d</string>
+    <string name="open_sim_toolkit">Open SIM Toolkit</string>
+    <string name="shortcut_sim_toolkit">SIM Toolkit</string>
+    <string name="shortcut_sim_toolkit_with_slot">SIM Toolkit #%d</string>
+
+    <!-- Settings -->
+    <string name="pref_info_website_url" translatable="false">https://uonest.com</string>
+
+    <!-- Toast -->
+    <string name="toast_prompt_to_enable_sim_toolkit">Please ENABLE your \"%s\" application</string>
+
+    <!-- Quick Compatibility -->
+    <string name="quick_compatibility">Quick Compatibility Check</string>
+    <string name="quick_compatibility_unknown">Unknown</string>
+</resources>

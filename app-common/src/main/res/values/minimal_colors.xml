@@ -1,0 +1,33 @@
+<resources>
+    <color name="minimal_background">#F2F3F5</color>
+    <color name="add_esim_background">@color/minimal_background</color>
+    <color name="minimal_surface">#FFFFFF</color>
+    <!-- Opaque fill prevents swipe action colors from bleeding through. -->
+    <color name="minimal_profile_surface">#FFFFFF</color>
+    <color name="minimal_profile_name">#0B143A</color>
+    <color name="minimal_profile_provider">#7D8499</color>
+    <color name="minimal_profile_iccid">#747C92</color>
+    <color name="minimal_profile_shadow">#600F172A</color>
+    <color name="minimal_profile_outline">#18788DA8</color>
+    <color name="minimal_card_shadow">#400F172A</color>
+    <color name="minimal_glass_card_shadow">#280F172A</color>
+    <color name="minimal_tint">#F0F0F3</color>
+    <color name="minimal_notification_success_background">#EDF7F0</color>
+    <color name="minimal_notification_failure_background">#FFF1EF</color>
+    <color name="minimal_notification_unknown_background">#F1F3F5</color>
+    <color name="minimal_notification_success_text">#287D46</color>
+    <color name="minimal_code_header">#E9EFF6</color>
+    <color name="minimal_code_body">#F5F8FC</color>
+    <color name="minimal_code_outline">#DCE5EF</color>
+    <color name="minimal_code_divider">#E0E7F0</color>
+    <color name="minimal_tabs_glass_fill">#EFF0F1</color>
+    <color name="minimal_text">#1D1D1F</color>
+    <color name="minimal_secondary">#6E6E73</color>
+    <color name="minimal_blue">#0066D6</color>
+    <color name="minimal_red">#CF342B</color>
+    <color name="minimal_line">#E9E9ED</color>
+    <color name="minimal_language_outline">#E3E9F0</color>
+    <color name="minimal_blue_soft">#EDF5FF</color>
+    <color name="minimal_switch_off">#DEDEE3</color>
+    <color name="minimal_failure_notice_text">#A3443C</color>
+</resources>

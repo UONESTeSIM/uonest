@@ -1,0 +1,8 @@
+<resources>
+    <string name="notification_card_title">%1$s · Notifications</string>
+    <string name="notification_server">Notification server</string>
+    <string name="notification_delivery_unknown">Unconfirmed</string>
+    <string name="notification_delivery_success">Sent</string>
+    <string name="notification_delivery_failed">Send failed</string>
+    <item type="id" name="notifications_card" />
+</resources>

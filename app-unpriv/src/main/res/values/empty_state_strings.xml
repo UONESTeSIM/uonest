@@ -1,0 +1,4 @@
+<resources>
+    <string name="empty_esim_title">No accessible eSIM yet</string>
+    <string name="empty_esim_description">Insert a compatible eSIM card or connect a USB reader.\nCards will appear automatically once accessible.</string>
+</resources>

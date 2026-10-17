@@ -1,0 +1,5 @@
+Official logo artwork retrieved 2026-10-16 for debug-only demo profiles.
+vodafone.png: https://www.vodafone.co.uk/ (header inline SVG)
+tmobile.png: https://www.t-mobile.com/content/dam/t-mobile/ntm/branding/logos/corporate/tmo-logo-v4.svg
+orange.png: https://boosted.orange.com/docs/4.2/dist/img/orange_logo.svg
+SVG artwork rasterized to 256px PNG without changing its design.

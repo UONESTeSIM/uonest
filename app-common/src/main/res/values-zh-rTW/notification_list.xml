@@ -1,0 +1,7 @@
+<resources>
+    <string name="notification_card_title">%1$s · 通知記錄</string>
+    <string name="notification_server">通知伺服器</string>
+    <string name="notification_delivery_unknown">未確認</string>
+    <string name="notification_delivery_success">傳送成功</string>
+    <string name="notification_delivery_failed">傳送失敗</string>
+</resources>

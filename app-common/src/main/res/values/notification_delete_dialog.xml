@@ -1,0 +1,3 @@
+<resources>
+    <string name="minimal_notification_delete_confirm">Delete this notification record? The eSIM profile will not be deleted. Unsent notifications can no longer be sent after deletion.</string>
+</resources>

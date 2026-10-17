@@ -1,0 +1,5 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/minimal_tabs_glass_fill" />
+    <stroke android:width="0.4dp" android:color="@color/minimal_profile_outline" />
+    <corners android:radius="25dp" />
+</shape>

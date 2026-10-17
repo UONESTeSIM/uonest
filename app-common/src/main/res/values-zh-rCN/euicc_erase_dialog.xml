@@ -1,0 +1,5 @@
+<resources>
+    <string name="euicc_erase_warning">将删除这张芯片上的所有 eSIM 号卡，此操作不可恢复。</string>
+    <string name="euicc_erase_instruction">请输入 EID 后 8 位：%1$s</string>
+    <string name="euicc_erase_input_hint">EID 后 8 位数字</string>
+</resources>

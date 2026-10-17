@@ -1,0 +1,27 @@
+CMLink logo
+Source: https://www.cmlink.com/jp/favicon.ico?v=1.0
+Official site: https://www.cmlink.com/jp/
+Retrieved: 2026-10-15
+Converted from ICO to PNG, artwork unchanged; used only to identify the profile provider.
+CMLink and its logo belong to China Mobile International.
+
+China Mobile network logo
+Source: https://www.chinamobileltd.com/en/images/global/icon_logo.png
+Official site: https://www.chinamobileltd.com/en/global/home.php
+Retrieved: 2026-10-15
+Unmodified artwork, used only to identify the registered mobile network.
+Logo belongs to China Mobile.
+
+China Unicom network logo
+Source: https://resuac.10010.com/portal/favicon.ico
+Official site: https://uac.10010.com/
+Retrieved: 2026-10-15
+Converted from ICO to PNG, artwork unchanged; used only to identify the registered network.
+Logo belongs to China Unicom.
+
+China Telecom network logo
+Source: https://www.chinatelecomglobal.com/CTG_Icon.png
+Official site: https://www.chinatelecomglobal.com/
+Retrieved: 2026-10-15
+Unmodified artwork, used only to identify the registered network.
+Logo belongs to China Telecom.

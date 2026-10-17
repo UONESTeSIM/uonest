@@ -1,0 +1,19 @@
+<resources>
+    <string name="download_failure_title">Download failed</string>
+    <string name="download_failure_check_network">Check your connection or switch between Wi-Fi and mobile data, then try again.</string>
+    <string name="download_failure_contact_release">Ask your eSIM provider whether this profile is ready for download.</string>
+    <item type="id" name="download_status" />
+    <item type="id" name="download_failure_reason" />
+    <item type="id" name="download_failure_advice" />
+    <item type="id" name="download_return_home" />
+    <string name="download_return_home">Return home</string>
+    <string name="download_progress_confirming">Confirming profile information</string>
+    <string name="download_failure_not_ready">This eSIM is not yet available for download.</string>
+    <string name="download_failure_eid_mismatch">This eSIM does not match the selected chip’s EID.</string>
+    <string name="download_failure_secure_connection">Could not establish a secure connection to the carrier.</string>
+    <string name="download_failure_unknown">The eSIM download could not be completed.</string>
+    <string name="download_failure_check_address">Check your connection and the activation code’s server address.</string>
+    <string name="download_failure_check_connection">Check your connection and device date and time. Contact your provider if the problem persists.</string>
+    <string name="download_failure_check_chip">Check that the eSIM chip can be read, then consult the error diagnostics.</string>
+    <string name="download_failure_check_diagnostics">View the error diagnostics for details and share them with your eSIM provider if needed.</string>
+</resources>

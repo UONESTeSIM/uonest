@@ -1,0 +1,115 @@
+name: Build release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (X.Y.Z, for example 1.0.1)'
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uonest-release
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out source and native dependencies
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Validate release version
+        id: version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: python3 tools/ci/prepare_release.py
+
+      - name: Set up Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Android build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          { yes || :; } | "$sdkmanager" --licenses > /dev/null
+          "$sdkmanager" 'platforms;android-37' 'build-tools;37.0.0' 'ndk;26.1.10909125'
+
+      - name: Apply native profile-owner support
+        run: bash tools/ci/apply_lpac_patch.sh
+
+      - name: Test release tooling
+        run: python3 -m unittest discover -s tools/ci/tests -v
+
+      - name: Test and build unsigned release
+        run: |
+          bash ./gradlew --no-daemon -I tools/ci/release.init.gradle \
+            :app-common:testDebugUnitTest :app-unpriv:testDebugUnitTest \
+            :app-unpriv:assembleRelease
+
+      - name: Sign and verify both certificates
+        env:
+          UONEST_KEYSTORE_BASE64: ${{ secrets.UONEST_KEYSTORE_BASE64 }}
+          UONEST_STORE_PASSWORD: ${{ secrets.UONEST_STORE_PASSWORD }}
+          UONEST_KEY_PASSWORD: ${{ secrets.UONEST_KEY_PASSWORD }}
+          NINEESIM_KEYSTORE_BASE64: ${{ secrets.NINEESIM_KEYSTORE_BASE64 }}
+          NINEESIM_STORE_PASSWORD: ${{ secrets.NINEESIM_STORE_PASSWORD }}
+          NINEESIM_KEY_PASSWORD: ${{ secrets.NINEESIM_KEY_PASSWORD }}
+        run: python3 tools/ci/sign_release.py
+
+      - name: Save verified APK and checksum
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: uonest-${{ steps.version.outputs.version }}
+          path: |
+            release-output/*.apk
+            release-output/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+  publish:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release tooling at the triggering commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Download verified build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: uonest-${{ needs.build.outputs.version }}
+          path: release-output
+
+      - name: Publish release for the triggering commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+        run: python3 tools/ci/publish_release.py

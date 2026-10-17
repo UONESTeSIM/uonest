@@ -1,0 +1,5 @@
+<resources>
+    <string name="download_confirmation_title">輸入確認碼</string>
+    <string name="download_confirmation_instruction">請輸入電信業者提供的確認碼</string>
+    <string name="download_confirmation_continue">開始下載</string>
+</resources>

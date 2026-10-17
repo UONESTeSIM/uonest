@@ -1,0 +1,10 @@
+<resources>
+    <color name="download_notice_glass_top">#F24B3433</color>
+    <color name="download_notice_glass_bottom">#E6382728</color>
+    <color name="download_notice_glass_edge">#806B4B49</color>
+    <color name="download_diagnostics_glass_top">#F234404F</color>
+    <color name="download_diagnostics_glass_bottom">#E6232D3B</color>
+    <color name="download_diagnostics_glass_edge">#80607287</color>
+    <color name="download_glass_header">#0CFFFFFF</color>
+    <color name="download_glass_divider">#404F637A</color>
+</resources>

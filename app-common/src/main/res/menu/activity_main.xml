@@ -1,0 +1,4 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<item android:id="@+id/minimal_add_action" android:icon="@drawable/ic_add" android:title="@string/profile_download" android:visible="false" app:showAsAction="always"/>
+<item android:id="@+id/minimal_more_action" android:icon="@drawable/ic_menu_black" android:title="@string/minimal_more" app:showAsAction="always"/>
+</menu>

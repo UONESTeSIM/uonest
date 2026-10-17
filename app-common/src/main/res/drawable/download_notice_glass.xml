@@ -1,0 +1,7 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient android:angle="270"
+        android:startColor="@color/download_notice_glass_top"
+        android:endColor="@color/download_notice_glass_bottom" />
+    <corners android:radius="12dp" />
+    <stroke android:width="0.5dp" android:color="@color/download_notice_glass_edge" />
+</shape>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="download_failure_title">下載失敗</string>
+    <string name="download_failure_check_network">請檢查網路，或切換 Wi-Fi / 行動網路後重試。</string>
+    <string name="download_failure_contact_release">請聯絡 eSIM 提供商確認號卡是否已開放下載。</string>
+    <string name="download_return_home">返回首頁</string>
+    <string name="download_progress_confirming">正在確認號卡資訊</string>
+    <string name="download_failure_not_ready">電信業者尚未開放此 eSIM 的下載。</string>
+    <string name="download_failure_eid_mismatch">此 eSIM 與目前晶片的 EID 不符。</string>
+    <string name="download_failure_secure_connection">無法與電信業者建立安全連線。</string>
+    <string name="download_failure_unknown">未能完成 eSIM 下載。</string>
+    <string name="download_failure_check_address">請檢查網路連線和啟用碼中的伺服器位址。</string>
+    <string name="download_failure_check_connection">請檢查網路和裝置日期時間；仍有問題請聯絡提供商。</string>
+    <string name="download_failure_check_chip">請確認晶片可正常讀取，再查看錯誤診斷。</string>
+    <string name="download_failure_check_diagnostics">請查看錯誤診斷了解詳情，必要時提供給 eSIM 提供商排查。</string>
+</resources>

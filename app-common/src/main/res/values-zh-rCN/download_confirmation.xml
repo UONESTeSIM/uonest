@@ -1,0 +1,5 @@
+<resources>
+    <string name="download_confirmation_title">输入确认码</string>
+    <string name="download_confirmation_instruction">请输入运营商提供的确认码</string>
+    <string name="download_confirmation_continue">开始下载</string>
+</resources>

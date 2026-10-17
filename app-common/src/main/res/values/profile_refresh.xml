@@ -1,0 +1,3 @@
+<resources>
+    <string name="profile_read_temporarily_failed">Unable to read profiles right now. Pull down to refresh in a moment.</string>
+</resources>

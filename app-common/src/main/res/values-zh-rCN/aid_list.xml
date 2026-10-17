@@ -1,0 +1,9 @@
+<resources>
+    <string name="aid_input_hint">添加AID（十六进制）</string>
+    <string name="aid_add">添加 AID</string>
+    <string name="aid_duplicate">该 AID 已在列表中</string>
+    <string name="aid_restore">重置为默认值</string>
+    <string name="aid_standard">GSMA 标准 · 默认</string>
+    <string name="aid_custom">自定义 AID</string>
+    <string name="aid_restored">已恢复默认值</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="open_sim_toolkit">STK メニューを開く</string>
+    <!-- Settings -->
+    <!-- Toast -->
+    <string name="toast_prompt_to_enable_sim_toolkit">「%s」アプリを有効化してください</string>
+    <!-- Quick Compatibility -->
+    <string name="quick_compatibility">クイックで互換性を確認</string>
+    <string name="quick_compatibility_unknown">不明</string>
+    <string name="shortcut_sim_toolkit">STK メニュー</string>
+    <string name="shortcut_sim_toolkit_with_slot">STK メニュー #%d</string>
+</resources>

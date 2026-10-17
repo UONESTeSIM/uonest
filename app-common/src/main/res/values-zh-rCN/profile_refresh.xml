@@ -1,0 +1,3 @@
+<resources>
+    <string name="profile_read_temporarily_failed">暂时无法读取号卡，请稍后下拉刷新。</string>
+</resources>

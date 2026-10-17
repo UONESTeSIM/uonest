@@ -1,0 +1,13 @@
+<resources>
+    <item name="aid_add" type="id" />
+    <item name="aid_entries" type="id" />
+    <string name="aid_input_hint">Add AID (hexadecimal)</string>
+    <string name="aid_add">Add AID</string>
+    <string name="aid_duplicate">This AID is already in the list.</string>
+    <string name="aid_restore">Reset to defaults</string>
+    <string name="aid_standard">GSMA standard · Default</string>
+    <string name="aid_custom">Custom AID</string>
+    <item name="aid_value" type="id" />
+    <item name="aid_delete" type="id" />
+    <string name="aid_restored">Defaults restored</string>
+</resources>

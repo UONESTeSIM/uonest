@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name="im.angry.easyeuicc.UsbReaderPreviewActivity"
+            android:exported="true" android:label="USB 读卡器演示" />
+        <activity android:name="im.angry.easyeuicc.AddEsimPreviewActivity"
+            android:exported="true" android:label="@string/add_esim_title"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name="im.angry.easyeuicc.DemoProfilesActivity"
+            android:exported="true" android:label="号卡演示" />
+        <activity android:name="im.angry.easyeuicc.DownloadAnimationPreviewActivity"
+            android:exported="true" android:label="下载动画预览" />
+    </application>
+</manifest>

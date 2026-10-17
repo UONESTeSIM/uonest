@@ -1,0 +1,23 @@
+<resources>
+    <string name="startup_checking">Checking…</string>
+    <string name="startup_checking_detail">Checking secure element services and slot channels</string>
+    <string name="startup_busy">Checking…</string>
+    <string name="startup_automatic">Startup · Automatically checking device compatibility</string>
+    <string name="startup_manual">Rechecking device compatibility</string>
+    <string name="startup_recheck">Recheck</string>
+    <string name="startup_recheck_detail">Check device compatibility again</string>
+    <string name="startup_entering">Check passed. Opening home…</string>
+    <string name="startup_passed">Check passed</string>
+    <string name="startup_return_home">Back to home</string>
+    <string name="startup_ready">Compatible card access is available</string>
+    <string name="startup_usb_ready">USB card readers are supported</string>
+    <string name="startup_ready_detail">Results are for reference; actual access depends on the card and device</string>
+    <string name="startup_usb_detail">No internal SIM interface was found. A compatible USB card reader can be connected.</string>
+    <string name="startup_unavailable">Internal slots are currently inaccessible</string>
+    <string name="startup_unavailable_detail">No supported slot or USB access was found. Check the device and retry.</string>
+    <string name="startup_slots">OMAPI slots</string>
+    <string name="startup_isdr">ISD-R access</string>
+    <string name="startup_not_found">Not found</string>
+    <string name="startup_supported">Supported</string>
+    <string name="startup_unsupported">Not supported</string>
+</resources>

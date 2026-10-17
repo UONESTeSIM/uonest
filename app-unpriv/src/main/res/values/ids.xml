@@ -1,0 +1,4 @@
+<resources>
+    <item name="language_selector" type="id" />
+    <item name="es10x_mss_selector" type="id" />
+</resources>

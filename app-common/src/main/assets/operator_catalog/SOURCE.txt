@@ -1,0 +1,8 @@
+Source: https://github.com/NekokoLPA/operator-icons
+Revision: a24a1e048f0c690403657c2e034442cc8d6d5c40
+Generated with tools/import_operator_catalog.py.
+Rules and PNGs are from the upstream snapshot. Network-level icons are used;
+nested brand icon overrides are not used. No runtime network requests.
+No LICENSE file was present in this data repository at this revision.
+The application's MIT license does not establish the license of these assets.
+Upstream terms and trademark permissions need checking before public distribution.

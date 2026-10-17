@@ -1,0 +1,3 @@
+<resources>
+    <string name="minimal_notification_delete_confirm">確定刪除這筆通知記錄？不會刪除 eSIM 號卡，未傳送的通知刪除後將無法再傳送。</string>
+</resources>

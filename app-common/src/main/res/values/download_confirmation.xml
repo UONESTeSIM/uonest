@@ -1,0 +1,6 @@
+<resources>
+    <string name="download_confirmation_title">Enter confirmation code</string>
+    <string name="download_confirmation_instruction">Enter the confirmation code provided by your carrier.</string>
+    <string name="download_confirmation_continue">Start download</string>
+    <item type="id" name="download_confirmation_input" />
+</resources>

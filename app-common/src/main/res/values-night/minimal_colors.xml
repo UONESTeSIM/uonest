@@ -1,0 +1,32 @@
+<resources>
+    <color name="minimal_background">#101012</color>
+    <color name="add_esim_background">@color/minimal_background</color>
+    <color name="minimal_surface">#202023</color>
+    <color name="minimal_profile_surface">#262F3D</color>
+    <color name="minimal_profile_name">@color/minimal_text</color>
+    <color name="minimal_profile_provider">@color/minimal_secondary</color>
+    <color name="minimal_profile_iccid">@color/minimal_secondary</color>
+    <color name="minimal_profile_shadow">#80000000</color>
+    <color name="minimal_profile_outline">#1AAFC7E4</color>
+    <color name="minimal_card_shadow">#40000000</color>
+    <color name="minimal_glass_card_shadow">#28000000</color>
+    <color name="minimal_tint">#2D2D32</color>
+    <color name="minimal_notification_success_background">#22392C</color>
+    <color name="minimal_notification_failure_background">#3B2726</color>
+    <color name="minimal_notification_unknown_background">#2D3035</color>
+    <color name="minimal_notification_success_text">#83D79B</color>
+    <color name="minimal_code_header">#2C3542</color>
+    <color name="minimal_code_body">#242C37</color>
+    <color name="minimal_code_outline">#354252</color>
+    <color name="minimal_code_divider">#374251</color>
+    <color name="minimal_tabs_glass_fill">#BF2D3A4B</color>
+    <color name="minimal_text">#F5F5F7</color>
+    <color name="minimal_secondary">#A5A5AD</color>
+    <color name="minimal_blue">#6AAEFF</color>
+    <color name="minimal_red">#FF827B</color>
+    <color name="minimal_line">#343438</color>
+    <color name="minimal_language_outline">#354252</color>
+    <color name="minimal_blue_soft">#1A2C41</color>
+    <color name="minimal_switch_off">#48484B</color>
+    <color name="minimal_failure_notice_text">#FFB4AB</color>
+</resources>

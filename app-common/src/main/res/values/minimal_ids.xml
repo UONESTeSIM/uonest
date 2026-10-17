@@ -1,0 +1,11 @@
+<resources>
+    <item name="about_certificate_hash" type="id" />
+    <item name="logs_text" type="id" />
+    <item name="logs_code_block" type="id" />
+    <item name="isdr_aid_list_editor" type="id" />
+    <item name="logs_copy" type="id" />
+    <item name="logs_refresh" type="id" />
+    <item name="recycler_view" type="id" />
+    <item name="reset" type="id" />
+    <item name="save" type="id" />
+</resources>
