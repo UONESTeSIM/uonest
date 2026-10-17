@@ -54,7 +54,7 @@ def main():
         raise ValueError('APK package/version does not match the release configuration.')
     output_dir = Path('release-output')
     output_dir.mkdir(exist_ok=True)
-    output = output_dir / f'uonest-{version}-dual-signed.apk'
+    output = output_dir / f'uonest-{version}.apk'
     checksum = output.with_suffix('.apk.sha256')
     output.unlink(missing_ok=True)
     checksum.unlink(missing_ok=True)

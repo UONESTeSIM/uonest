@@ -110,7 +110,7 @@ def main():
     release_version(version)
     # For annotated tags GITHUB_SHA can be a tag object; resolve the checked-out commit.
     source_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-    apk = Path('release-output') / f'uonest-{version}-dual-signed.apk'
+    apk = Path('release-output') / f'uonest-{version}.apk'
     publish(version, source_sha, apk, apk.with_suffix('.apk.sha256'))
 
 

@@ -14,7 +14,7 @@ class PublishTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.apk = Path(self.directory.name) / 'uonest-1.0.1-dual-signed.apk'
+        self.apk = Path(self.directory.name) / 'uonest-1.0.1.apk'
         self.apk.write_bytes(b'test verified artifact')
         self.checksum = self.apk.with_suffix('.apk.sha256')
         self.checksum.write_text(hashlib.sha256(self.apk.read_bytes()).hexdigest() + '  ' + self.apk.name + '\n')

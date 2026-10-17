@@ -65,10 +65,6 @@ This fingerprint belongs to uonest's own release key. Builds signed with another
 
 Deleted profiles cannot be restored within the app. Downloading again may require a new activation code from the operator. Updates require a package name and signing identity compatible with the installed version.
 
-## GitHub Actions release builds
-
-Each push to `main` automatically increments the version, builds a release APK, and publishes it to GitHub Releases with both uonest and 9eSIM signatures. Manual builds and explicit `vX.Y.Z` tag releases are also supported. See the [CI setup guide](docs/github-actions.en.md) for the six required Secrets, version rules, and instructions.
-
 ## Build from source
 
 Use Android Studio or a command-line environment with a JDK and Android SDK. The current unprivileged module uses Android SDK 37 and NDK `26.1.10909125`; local builds use JDK 21. Refer to the repository's Gradle configuration for build-tool versions.

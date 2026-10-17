@@ -65,10 +65,6 @@ uonest 发布签名证书的 **SHA-1 指纹**（十六进制，不含冒号）�
 
 删除配置后无法在应用内恢复，重新下载可能需要向运营商获取新的激活码。安装更新时，应使用与已安装版本兼容的包名和签名。
 
-## GitHub Actions 自动构建
-
-每次推送 `main` 自动递增版本号、构建并发布正式版 APK 到 GitHub Releases，保留 uonest 与 9eSIM 双签名。同时支持手动构建和指定 `vX.Y.Z` 标签发布。所需的 6 个 Secrets、版本号规则和操作步骤见 [自动构建说明](docs/github-actions.md)。
-
 ## 从源码构建
 
 使用 Android Studio 或配置好 JDK、Android SDK 的命令行环境。当前普通版模块配置使用 Android SDK 37、NDK `26.1.10909125`；本地构建使用 JDK 21。构建工具版本以仓库中的 Gradle 配置为准。
