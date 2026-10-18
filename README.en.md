@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="docs/assets/uonest-logo.svg" alt="uonest" width="280">
+  <img src="docs/assets/uonest-logo-animated.png" alt="uonest" width="280">
 </p>
-
-# uonest
 
 <p align="center">
   <a href="README.md">简体中文</a> | <strong>English</strong>
@@ -45,7 +43,7 @@ USB reader access does not rely on the app-signature allowlist used for phone SI
 
 ## ARA-M certificate fingerprint
 
-The **SHA-1 fingerprint** of the uonest release signing certificate, in hexadecimal without colons:
+The **SHA-1 fingerprint** of the uonest release signing certificate:
 
 ```text
 23BEBA4A34379ED306CFE63EAF4FE8EECA9979C9

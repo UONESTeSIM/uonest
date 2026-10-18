@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="docs/assets/uonest-logo.svg" alt="uonest" width="280">
+  <img src="docs/assets/uonest-logo-animated.png" alt="uonest" width="280">
 </p>
-
-# uonest
 
 <p align="center">
   <strong>简体中文</strong> | <a href="README.en.md">English</a>
@@ -45,7 +43,7 @@ USB 读卡器访问不依赖手机卡槽的应用签名白名单，但仍受读�
 
 ## ARA-M 证书指纹
 
-uonest 发布签名证书的 **SHA-1 指纹**（十六进制，不含冒号）：
+uonest 发布签名证书的 **SHA-1 指纹**：
 
 ```text
 23BEBA4A34379ED306CFE63EAF4FE8EECA9979C9
