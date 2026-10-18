@@ -30,6 +30,7 @@ import im.angry.openeuicc.ui.minimal.ProfileCardView
 import im.angry.openeuicc.ui.minimal.ProfileDeleteView
 import im.angry.openeuicc.ui.minimal.ProfileEditorView
 import im.angry.openeuicc.ui.minimal.ProfileEditorDialog
+import im.angry.openeuicc.util.setupRootViewSystemBarInsets
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -76,7 +77,7 @@ class DemoProfilesActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@DemoProfilesActivity)
             adapter = this@DemoProfilesActivity.adapter
             clipToPadding = false
-            setPadding(0, ui.dp(6), 0, ui.dp(18))
+            setPadding(0, ui.dp(6), 0, 0)
         }
         val refresh = SwipeRefreshLayout(this).apply {
             id = R.id.view_pager
@@ -131,7 +132,7 @@ class DemoProfilesActivity : AppCompatActivity() {
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             toolbar.layoutParams = toolbar.layoutParams.apply { height = ui.dp(60) + bars.top }
             toolbar.setPadding(ui.dp(18) + bars.left, ui.dp(8) + bars.top, ui.dp(18) + bars.right, ui.dp(8))
-            list.setPadding(bars.left, ui.dp(6), bars.right, ui.dp(18) + bars.bottom)
+            list.setPadding(bars.left, ui.dp(6), bars.right, bars.bottom)
             insets
         }
         showRequestedPreview()
@@ -210,36 +211,95 @@ class DemoProfilesActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        findViewById<MinimalToolbar>(R.id.toolbar).apply {
-            overflowIcon = overflowIcon?.mutate()?.apply { setTint(ui.color(R.color.minimal_text)) }
-        }
-        menu.add(Menu.NONE, R.id.minimal_add_action, 0, getString(R.string.profile_download)).apply {
-            setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_ALWAYS)
-            actionView = android.widget.FrameLayout(this@DemoProfilesActivity).apply {
-                layoutParams = ViewGroup.LayoutParams(ui.dp(48), ui.dp(40))
-                addView(android.widget.ImageButton(this@DemoProfilesActivity).apply {
-                    contentDescription = getString(R.string.profile_download)
-                    setImageResource(R.drawable.ic_minimal_plus)
-                    imageTintList = android.content.res.ColorStateList.valueOf(ui.color(R.color.minimal_text))
+        menuInflater.inflate(R.menu.activity_main, menu)
+        // Keep the demo actions visually aligned with MainActivity's real toolbar.
+        listOf(R.id.minimal_add_action to R.drawable.ic_minimal_plus,
+            R.id.minimal_more_action to R.drawable.ic_minimal_more).forEach { (id, icon) ->
+            val item = menu.findItem(id)
+            item.isVisible = true
+            val button = android.widget.ImageButton(this).apply {
+                contentDescription = item.title
+                setImageResource(icon)
+                imageTintList = android.content.res.ColorStateList.valueOf(ui.color(R.color.minimal_text))
+                background = im.angry.openeuicc.ui.minimal.HomeGlass.surface(this,
+                    whiteAlpha = 170, cornerRadiusDp = 20f)
+                elevation = ui.dp(2).toFloat()
+                outlineAmbientShadowColor = ui.color(R.color.minimal_card_shadow)
+                outlineSpotShadowColor = ui.color(R.color.minimal_card_shadow)
+                if (id == R.id.minimal_more_action) {
+                    setPadding(ui.dp(8), ui.dp(8), ui.dp(8), ui.dp(8))
+                    scaleType = ImageView.ScaleType.CENTER
+                } else {
                     setPadding(ui.dp(10), ui.dp(10), ui.dp(10), ui.dp(10))
-                    background = android.graphics.drawable.GradientDrawable().apply {
-                        shape = android.graphics.drawable.GradientDrawable.OVAL
-                        setColor(ui.color(R.color.minimal_blue_soft))
-                    }
-                    setOnClickListener {
+                }
+                setOnClickListener {
+                    if (id == R.id.minimal_add_action) {
                         startActivity(Intent(this@DemoProfilesActivity, AddEsimPreviewActivity::class.java))
+                    } else {
+                        showDemoMenu()
                     }
-                }, android.widget.FrameLayout.LayoutParams(ui.dp(40), ui.dp(40), Gravity.END))
+                }
+            }
+            item.actionView = android.widget.FrameLayout(this).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ui.dp(if (id == R.id.minimal_more_action) 56 else 48), ui.dp(40))
+                clipChildren = false
+                clipToPadding = false
+                addView(button, android.widget.FrameLayout.LayoutParams(ui.dp(40), ui.dp(40), Gravity.END))
             }
         }
-        menu.add("恢复演示卡片").setOnMenuItemClickListener { reset(); save(); render(); true }
-        menu.add("下载动画预览").setOnMenuItemClickListener {
-            startActivity(Intent(this, DownloadAnimationPreviewActivity::class.java)); true
-        }
-        menu.add("返回真实首页").setOnMenuItemClickListener {
-            startActivity(Intent(this, UnprivilegedMainActivity::class.java)); finish(); true
-        }
         return true
+    }
+
+    private fun showDemoMenu() {
+        // Match MainActivity's full-page glass menu, with local-only demo actions.
+        val ui = MinimalUi(this, rowTitleSize = 16f, rowDetailSize = 13f, glassCards = true)
+        val dialog = android.app.Dialog(this, R.style.Theme_OpenEUICC)
+        val page = ui.page()
+        val header = LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(-1, ui.dp(60)).apply {
+                marginStart = -ui.dp(16)
+            }
+            setPaddingRelative(0, ui.dp(8), ui.dp(4), ui.dp(8))
+        }
+        header.addView(android.widget.ImageButton(this).apply {
+            setImageResource(R.drawable.ic_minimal_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(ui.color(R.color.minimal_text))
+            contentDescription = getString(androidx.appcompat.R.string.abc_action_bar_up_description)
+            setPadding(ui.dp(8), ui.dp(8), ui.dp(8), ui.dp(8))
+            scaleType = ImageView.ScaleType.CENTER
+            background = null
+            setOnClickListener { dialog.dismiss() }
+        }, LinearLayout.LayoutParams(ui.dp(40), ui.dp(40)))
+        header.addView(ui.text(getString(R.string.minimal_more), 22f).apply {
+            typeface = android.graphics.Typeface.create("sans-serif-medium", 0)
+        }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = ui.dp(6) })
+        page.addView(header)
+        ui.row(ui.card(page, small = true), "恢复演示卡片", "恢复本地演示号卡及启用状态",
+            R.drawable.ic_minimal_refresh) {
+            reset(); save(); render(); dialog.dismiss()
+        }
+        ui.row(ui.card(page, small = true), "下载动画预览", "体验下载流程，不操作真实号卡",
+            R.drawable.ic_task_sim_card_download) {
+            dialog.dismiss()
+            startActivity(Intent(this, DownloadAnimationPreviewActivity::class.java))
+        }.apply {
+            (getChildAt(0) as ImageView).imageTintList =
+                android.content.res.ColorStateList.valueOf(ui.color(R.color.minimal_blue))
+        }
+        ui.row(ui.card(page, small = true), "返回真实首页", "退出演示，返回 App 首页",
+            R.drawable.ic_minimal_sim) {
+            dialog.dismiss()
+            startActivity(Intent(this, UnprivilegedMainActivity::class.java)); finish()
+        }
+        dialog.setContentView(ui.scroll(page))
+        dialog.window?.let { window ->
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+            setupRootViewSystemBarInsets(window.decorView, arrayOf(ui.pageInsets(page, true)))
+        }
+        dialog.show()
+        dialog.window?.setLayout(-1, -1)
     }
 
     private fun reset() {
@@ -307,9 +367,17 @@ class DemoProfilesActivity : AppCompatActivity() {
         val dialog = ProfileEditorDialog(this)
         val content = ProfileDeleteView(this,
             "仅移除本地演示卡片“${profile.name}”，可在更多中恢复。",
+            title = getString(R.string.profile_delete_title),
             onDelete = {
                 profiles.remove(profile); save(); render(); dialog.dismiss()
             }, onCancel = { dialog.dismiss() })
+        content.deleteButton.setText(R.string.profile_delete_action)
+        content.titleView.typeface = android.graphics.Typeface.create(
+            "sans-serif", android.graphics.Typeface.BOLD)
+        content.messageView.apply {
+            gravity = Gravity.CENTER
+            textSize = 14f
+        }
         dialog.setContentView(ui.scroll(content))
         dialog.show()
     }
@@ -328,17 +396,15 @@ class DemoProfilesActivity : AppCompatActivity() {
             val demoIccid = "8900000000000000${profile.id}"
             card.setIccid(demoIccid)
             card.profileClass.visibility = View.GONE
-            if (networkLogoPreview && profile.id == "0004") {
-                card.setCountry(null)
-            } else if (networkLogoPreview) {
-                val (asset, chinese, english) = when (profile.id) {
-                    "0001" -> Triple("vodafone", "沃达丰", "Vodafone")
-                    "0002" -> Triple("tmobile", "T-Mobile", "USA")
-                    else -> Triple("orange", "Orange", "France")
+            val logo = if (networkLogoPreview && profile.id != "0004") {
+                val asset = when (profile.id) {
+                    "0001" -> "vodafone"
+                    "0002" -> "tmobile"
+                    else -> "orange"
                 }
-                val logo = assets.open("operator_logos/$asset.png").use(android.graphics.BitmapFactory::decodeStream)
-                card.setBranding(logo, profile.country, chinese, english)
-            } else card.setCountry(profile.country)
+                assets.open("operator_logos/$asset.png").use(android.graphics.BitmapFactory::decodeStream)
+            } else null
+            card.setBranding(logo, profile.country)
             card.toggle.setOnCheckedChangeListener(null)
             card.toggle.isChecked = profile.enabled
             card.toggle.contentDescription = "${profile.name}，演示开关"

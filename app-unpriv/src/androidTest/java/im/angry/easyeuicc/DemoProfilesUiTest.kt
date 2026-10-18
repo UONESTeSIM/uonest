@@ -28,6 +28,13 @@ class DemoProfilesUiTest {
     private fun card(activity: Activity, position: Int) = activity.findViewById<RecyclerView>(R.id.profile_list)
         .findViewHolderForAdapterPosition(position)!!.itemView as ProfileCardView
     private fun settle() { instrumentation.waitForIdleSync(); SystemClock.sleep(200) }
+    private fun await(check: () -> Unit) {
+        repeat(60) {
+            if (runCatching(check).isSuccess) return
+            SystemClock.sleep(100)
+        }
+        check()
+    }
     private fun swipe(card: View, right: Boolean) {
         val time = SystemClock.uptimeMillis()
         val x = card.width / 2f
@@ -102,6 +109,7 @@ class DemoProfilesUiTest {
                 assertTrue(card(activity, 0).toggle.isChecked)
                 card(activity, 1).toggle.performClick()
             }
+            await { scenario.onActivity { assertTrue(card(it, 1).toggle.isChecked) } }
             settle()
             scenario.onActivity { activity ->
                 assertFalse(card(activity, 0).toggle.isChecked)
@@ -157,6 +165,56 @@ class DemoProfilesUiTest {
             val dir = File(context.getExternalFilesDir(null), "ui-verification").apply { mkdirs() }
             File(dir, "demo-profiles.png").outputStream().use {
                 instrumentation.uiAutomation.takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
+        }
+    }
+
+    @Test fun fullPageDemoMenuRestoresFixturesAndKeepsDownloadPreview() {
+        val context = instrumentation.targetContext
+        context.getSharedPreferences("demo_profiles", 0).edit().clear().commit()
+        val intent = Intent().setClassName(context, "im.angry.easyeuicc.DemoProfilesActivity")
+        ActivityScenario.launch<Activity>(intent).use { scenario ->
+            settle()
+            scenario.onActivity { card(it, 1).onDelete() }
+            settle()
+            instrumentation.runOnMainSync {
+                android.view.inspector.WindowInspector.getGlobalWindowViews()
+                    .filter { it.hasWindowFocus() }
+                    .mapNotNull { it.findViewById<View>(android.R.id.button1) }.single().performClick()
+            }
+            settle()
+            scenario.onActivity { activity ->
+                assertEquals(2, activity.findViewById<RecyclerView>(R.id.profile_list).adapter!!.itemCount)
+                views(activity.findViewById(R.id.minimal_more_action))
+                    .filterIsInstance<android.widget.ImageButton>().single().performClick()
+            }
+            settle()
+            fun clickMenu(title: String) {
+                instrumentation.runOnMainSync {
+                    val root = android.view.inspector.WindowInspector.getGlobalWindowViews().single { it.hasWindowFocus() }
+                    assertTrue("More must be a full-page scrollable menu", views(root).any { it is android.widget.ScrollView })
+                    var target: View = views(root).filterIsInstance<android.widget.TextView>().single { it.text.toString() == title }
+                    while (!target.isClickable) target = target.parent as View
+                    target.performClick()
+                }
+                settle()
+            }
+            clickMenu("恢复演示卡片")
+            scenario.onActivity { activity ->
+                assertEquals(3, activity.findViewById<RecyclerView>(R.id.profile_list).adapter!!.itemCount)
+                assertTrue(card(activity, 0).toggle.isChecked)
+                views(activity.findViewById(R.id.minimal_more_action))
+                    .filterIsInstance<android.widget.ImageButton>().single().performClick()
+            }
+            settle()
+            val monitor = instrumentation.addMonitor(DownloadAnimationPreviewActivity::class.java.name, null, false)
+            try {
+                clickMenu("下载动画预览")
+                val preview = instrumentation.waitForMonitorWithTimeout(monitor, 5000)
+                assertNotNull("Demo menu must open the simulated download, not a real download", preview)
+                instrumentation.runOnMainSync { preview.finish() }
+            } finally {
+                instrumentation.removeMonitor(monitor)
             }
         }
     }
