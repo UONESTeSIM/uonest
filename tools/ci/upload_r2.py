@@ -1,5 +1,6 @@
 """Mirror the published release to R2, verifying both local and stored bytes."""
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -15,6 +16,38 @@ def run(command):
     if result.returncode:
         # Do not forward raw SDK output or credentials into Actions logs.
         raise ValueError(f'{command[0]} failed; check R2 configuration, permissions and release assets, then retry.')
+    return result.stdout
+
+
+def update_latest(version, apk, digest, directory, endpoint, bucket):
+    # The release workflow serializes publishers, including retries of old tags.
+    destination = f's3://{bucket}/latest.json'
+    listing = json.loads(run(['aws', 's3api', 'list-objects-v2', '--bucket', bucket,
+                              '--prefix', 'latest.json', '--max-keys', '1',
+                              '--endpoint-url', endpoint, '--region', 'auto', '--output', 'json']))
+    if any(item['Key'] == 'latest.json' for item in listing.get('Contents', [])):
+        previous = directory / 'previous.json'
+        run(['aws', 's3', 'cp', destination, str(previous), '--endpoint-url', endpoint,
+             '--region', 'auto', '--only-show-errors'])
+        current = json.loads(previous.read_text())
+        if release_version(current['version'])[1] > release_version(version)[1]:
+            print('A newer R2 release exists; leaving latest.json unchanged.')
+            return
+        if current['version'] == version and current['sha256'] != digest:
+            raise ValueError('Same version has a different checksum; refusing to replace latest.json.')
+    manifest = directory / 'latest.json'
+    manifest.write_text(json.dumps({'version': version,
+                                   'path': f'releases/v{version}/{apk.name}',
+                                   'size': apk.stat().st_size, 'sha256': digest}, indent=2) + '\n')
+    run(['aws', 's3', 'cp', str(manifest), destination, '--endpoint-url', endpoint,
+         '--region', 'auto', '--only-show-errors', '--content-type', 'application/json',
+         '--cache-control', 'no-store'])
+    stored = directory / 'stored-latest.json'
+    run(['aws', 's3', 'cp', destination, str(stored), '--endpoint-url', endpoint,
+         '--region', 'auto', '--only-show-errors'])
+    if stored.read_bytes() != manifest.read_bytes():
+        raise ValueError('R2 latest.json read-back mismatch; retry the publish job.')
+    print(f'Published latest.json for v{version}.')
 
 
 def upload(version, account, bucket):
@@ -52,6 +85,7 @@ def upload(version, account, bucket):
             if hashlib.sha256(downloaded.read_bytes()).digest() != hashlib.sha256(path.read_bytes()).digest():
                 raise ValueError('R2 read-back checksum mismatch; retry the publish job.')
             print(f'Verified R2 object: {key}')
+        update_latest(version, apk, digest, directory, endpoint, bucket)
 
 
 if __name__ == '__main__':

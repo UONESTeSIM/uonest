@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 from pathlib import Path
 import sys
@@ -30,6 +31,9 @@ class R2Tests(unittest.TestCase):
             apk.write_bytes(self.payload)
             digest = 'bad' if self.bad_release else hashlib.sha256(self.payload).hexdigest()
             apk.with_suffix('.apk.sha256').write_text(f'{digest}  {apk.name}\n')
+        elif args[1] == 's3api':
+            key = 's3://uonest-downloads/latest.json'
+            return json.dumps({'Contents': [{'Key': 'latest.json'}] if key in self.stored else []})
         elif args[3].startswith('s3://'):
             Path(args[4]).write_bytes(b'corrupted' if self.corrupt_download else self.stored[args[3]])
         else:
@@ -47,7 +51,42 @@ class R2Tests(unittest.TestCase):
         self.assertEqual(self.stored[base + '.sha256'],
                          (hashlib.sha256(self.payload).hexdigest() + '  uonest-1.0.1.apk\n').encode())
         self.assertEqual(self.runner.call_args_list[0].args[0][:4], ['gh', 'release', 'download', 'v1.0.1'])
-        self.assertEqual(self.runner.call_count, 5)
+        manifest = json.loads(self.stored['s3://uonest-downloads/latest.json'])
+        self.assertEqual(manifest, {'version': '1.0.1', 'path': 'releases/v1.0.1/uonest-1.0.1.apk',
+                                    'size': len(self.payload), 'sha256': hashlib.sha256(self.payload).hexdigest()})
+        self.assertIn('--cache-control', self.runner.call_args_list[-2].args[0])
+        self.assertIn('no-store', self.runner.call_args_list[-2].args[0])
+
+    def test_old_retry_cannot_replace_newer_latest(self):
+        key = 's3://uonest-downloads/latest.json'
+        newer = json.dumps({'version': '1.0.10', 'sha256': 'newer'}).encode()
+        self.stored[key] = newer
+        self.upload()
+        self.assertEqual(self.stored[key], newer)
+
+    def test_failed_upload_preserves_previous_latest(self):
+        key = 's3://uonest-downloads/latest.json'
+        previous = b'{"version":"1.0.0"}'
+        self.stored[key] = previous
+        self.upload_failure = True
+        with self.assertRaises(ValueError):
+            self.upload()
+        self.assertEqual(self.stored[key], previous)
+
+    def test_same_version_cannot_change_published_digest(self):
+        key = 's3://uonest-downloads/latest.json'
+        previous = json.dumps({'version': '1.0.1', 'sha256': 'different'}).encode()
+        self.stored[key] = previous
+        with self.assertRaisesRegex(ValueError, 'different checksum'):
+            self.upload()
+        self.assertEqual(self.stored[key], previous)
+
+    def test_corrupt_latest_does_not_silently_reset_version(self):
+        key = 's3://uonest-downloads/latest.json'
+        self.stored[key] = b'not JSON'
+        with self.assertRaises(ValueError):
+            self.upload()
+        self.assertEqual(self.stored[key], b'not JSON')
 
     def test_invalid_release_never_uploads(self):
         self.bad_release = True
