@@ -4,18 +4,18 @@
             <item>
                 <shape>
                     <solid android:color="@color/minimal_blue" />
-                    <corners android:radius="21dp" />
+                    <corners android:radius="22dp" />
                 </shape>
             </item>
             <item>
                 <shape>
                     <gradient android:angle="270" android:startColor="#30FFFFFF"
                         android:centerColor="#00FFFFFF" android:endColor="#10002D70" />
-                    <corners android:radius="21dp" />
+                    <corners android:radius="22dp" />
                     <stroke android:width="0.5dp" android:color="#30FFFFFF" />
                 </shape>
             </item>
         </layer-list>
     </item>
-    <item><shape><solid android:color="@android:color/transparent"/><corners android:radius="21dp"/></shape></item>
+    <item><shape><solid android:color="@android:color/transparent"/><corners android:radius="22dp"/></shape></item>
 </selector>

@@ -21,6 +21,8 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
@@ -36,6 +38,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @SuppressLint("NotifyDataSetChanged")
 open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
@@ -64,6 +68,7 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
     private var updatingPages = false
     private var lastPhoneSlot = 0
     private var slotUpdate: kotlinx.coroutines.Job? = null
+    private var lastUsbResult: EuiccChannelManager.UsbChannelOpenResult? = null
 
     private data class Page(
         val id: Long,
@@ -130,7 +135,7 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
         }
         loadingProgress = requireViewById(R.id.loading)
         tabs = requireViewById<TabLayout>(R.id.main_tabs).apply {
-            // Let the selected segment's shadow extend into the surrounding 4dp inset.
+            // Let the selected segment's shadow extend into the surrounding 3dp inset.
             clipChildren = false
             clipToPadding = false
             (getChildAt(0) as? android.view.ViewGroup)?.apply {
@@ -167,7 +172,7 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
                     isDuplicateParentStateEnabled = true
                     setTextColor(contentColors)
                 })
-                layoutParams = android.widget.LinearLayout.LayoutParams(-1, ui.dp(42))
+                layoutParams = android.widget.LinearLayout.LayoutParams(-1, ui.dp(44))
             }
             (tab.customView?.parent as? android.view.ViewGroup)?.apply {
                 clipChildren = false
@@ -192,6 +197,29 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
             addAction(UsbManager.ACTION_USB_DEVICE_DETACHED)
             addAction("android.intent.action.SIM_STATE_CHANGED")
         })
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                euiccChannelManagerLoaded.await()
+                while (isActive) {
+                    delay(1500)
+                    if (!initialized || refreshing) continue
+                    try {
+                        val result = euiccChannelManagerService.pollUsbCard() ?: continue
+                        val previous = lastUsbResult
+                        lastUsbResult = result
+                        if (previous != null && result != previous) {
+                            Log.d(TAG, "USB card changed; refreshing slots")
+                            refresh(fromUsbEvent = true, showIndicator = false)
+                        }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Could not check USB card; will retry", e)
+                    }
+                }
+            }
+        }
 
         setupRootViewSystemBarInsets(
             window.decorView.rootView, arrayOf(
@@ -488,6 +516,10 @@ open class MainActivity : BaseEuiccAccessActivity(), OpenEuiccContextMarker {
     }
 
     fun refreshSlots() { if (initialized) refresh() }
+
+    internal fun onUsbReaderResult(result: EuiccChannelManager.UsbChannelOpenResult) {
+        lastUsbResult = result
+    }
 
     private val isProfileSwitchInProgress: Boolean
         get() = supportFragmentManager.fragments.filterIsInstance<EuiccManagementFragment>()

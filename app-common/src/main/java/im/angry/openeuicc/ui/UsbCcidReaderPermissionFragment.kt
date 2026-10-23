@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import im.angry.openeuicc.common.R
+import im.angry.openeuicc.core.usb.UsbCardFailure
 import im.angry.openeuicc.core.EuiccChannelManager
 import im.angry.openeuicc.ui.minimal.UsbReaderStatusView
 import im.angry.openeuicc.ui.minimal.UsbReaderStatusView.State
@@ -125,9 +126,14 @@ class UsbCcidReaderPermissionFragment : Fragment(), OpenEuiccContextMarker {
         statusView.showState(State.LOADING)
 
         try {
-            val (device, canOpen) = withContext(Dispatchers.IO) {
-                euiccChannelManager.tryOpenUsbEuiccChannel()
+            val activity = requireActivity() as MainActivity
+            var result = activity.euiccChannelManagerService.pollUsbCard()
+            while (result == null) {
+                activity.euiccChannelManagerService.waitForForegroundTask()
+                result = activity.euiccChannelManagerService.pollUsbCard()
             }
+            val (device, canOpen, failure) = result
+            activity.onUsbReaderResult(result)
 
             usbDevice = device
 
@@ -140,7 +146,12 @@ class UsbCcidReaderPermissionFragment : Fragment(), OpenEuiccContextMarker {
                 if (seIds.isEmpty()) statusView.showState(State.FAILURE)
                 else (requireActivity() as MainActivity).instantiateUsbTabs(seIds)
             } else {
-                statusView.showState(State.FAILURE)
+                statusView.showState(when (failure) {
+                    UsbCardFailure.NO_CARD -> State.NO_CARD
+                    UsbCardFailure.CARD_UNRESPONSIVE -> State.CARD_UNRESPONSIVE
+                    UsbCardFailure.UNSUPPORTED_CARD -> State.UNSUPPORTED_CARD
+                    else -> State.FAILURE
+                })
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e

@@ -18,6 +18,11 @@
     <string name="usb_permission">授予 USB 权限</string>
     <string name="usb_permission_needed">需要获得访问 USB 智能卡读卡器的权限。</string>
     <string name="usb_failed">无法通过 USB 智能卡读卡器连接到 eSIM。</string>
+    <string name="usb_no_card">读卡器已连接，未检测到卡片</string>
+    <string name="usb_card_unresponsive">读卡器已连接，未检测到可读取的卡片</string>
+    <string name="usb_unsupported_card">未识别到支持的 eSIM 卡，请插入支持的 eSIM 卡。</string>
+    <string name="usb_read_failed">读取卡失败，请检查卡片接触情况和读卡器连接</string>
+    <string name="usb_detect_again">重新检测</string>
     <string name="task_notification">长时间运行的后台任务</string>
     <string name="task_profile_download">正在下载 eSIM 配置文件</string>
     <string name="task_profile_download_failure">无法下载 eSIM 配置文件</string>

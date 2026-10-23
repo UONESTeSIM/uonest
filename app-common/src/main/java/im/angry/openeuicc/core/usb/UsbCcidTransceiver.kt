@@ -30,6 +30,8 @@ class UsbCcidTransceiver(
         private const val CCID_HEADER_LENGTH = 10
 
         private const val MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK = 0x80
+        private const val MESSAGE_TYPE_RDR_TO_PC_SLOT_STATUS = 0x81
+        private const val MESSAGE_TYPE_PC_TO_RDR_GET_SLOT_STATUS = 0x65
         private const val MESSAGE_TYPE_PC_TO_RDR_ICC_POWER_ON = 0x62
         private const val MESSAGE_TYPE_PC_TO_RDR_ICC_POWER_OFF = 0x63
         private const val MESSAGE_TYPE_PC_TO_RDR_XFR_BLOCK = 0x6f
@@ -106,12 +108,15 @@ class UsbCcidTransceiver(
         val data: ByteArray?
     ) {
         companion object {
-            fun parseHeaderFromBytes(headerBytes: ByteArray): CcidDataBlock {
+            fun parseHeaderFromBytes(
+                headerBytes: ByteArray,
+                expectedMessageType: Int = MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK
+            ): CcidDataBlock {
                 val buf = ByteBuffer.wrap(headerBytes)
                 buf.order(ByteOrder.LITTLE_ENDIAN)
 
                 val type = buf.get()
-                require(type == MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK.toByte()) { "Header has incorrect type value!" }
+                require(type == expectedMessageType.toByte()) { "Header has incorrect type value!" }
                 val dwLength = buf.int
                 val bSlot = buf.get()
                 val bSeq = buf.get()
@@ -209,7 +214,10 @@ class UsbCcidTransceiver(
         return response
     }
 
-    private fun receiveDataBlockImmediate(expectedSequenceNumber: Byte): CcidDataBlock {
+    private fun receiveDataBlockImmediate(
+        expectedSequenceNumber: Byte,
+        expectedMessageType: Int = MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK
+    ): CcidDataBlock {
         /*
          * Some USB CCID devices (notably NitroKey 3) may time-out and need a subsequent poke to
          * carry on communications.  No particular reason why the number 3 was chosen.  If we get a
@@ -230,18 +238,18 @@ class UsbCcidTransceiver(
         if (readBytes < CCID_HEADER_LENGTH) {
             throw UsbTransportException("USB-CCID error - failed to receive CCID header")
         }
-        if (inputBuffer[0] != MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK.toByte()) {
+        if (inputBuffer[0] != expectedMessageType.toByte()) {
             throw UsbTransportException(buildString {
                 append("USB-CCID error - bad CCID header")
                 append(", type ")
-                append("%d (expected %d)".format(inputBuffer[0], MESSAGE_TYPE_RDR_TO_PC_DATA_BLOCK))
+                append("%d (expected %d)".format(inputBuffer[0], expectedMessageType))
                 if (expectedSequenceNumber != inputBuffer[6]) {
                     append(", sequence number ")
                     append("%d (expected %d)".format(inputBuffer[6], expectedSequenceNumber))
                 }
             })
         }
-        var result = CcidDataBlock.parseHeaderFromBytes(inputBuffer)
+        var result = CcidDataBlock.parseHeaderFromBytes(inputBuffer, expectedMessageType)
         if (expectedSequenceNumber != result.bSeq) {
             throw UsbTransportException("USB-CCID error - expected sequence number $expectedSequenceNumber, got $result")
         }
@@ -263,6 +271,23 @@ class UsbCcidTransceiver(
         return result
     }
 
+
+    /** CCID 1.1 section 6.1.3: presence is independent of whether card activation succeeds. */
+    fun getSlotStatus(): CcidDataBlock {
+        skipAvailableInput()
+        val sequenceNumber = currentSequenceNumber++
+        val command = byteArrayOf(
+            MESSAGE_TYPE_PC_TO_RDR_GET_SLOT_STATUS.toByte(), 0, 0, 0, 0,
+            SLOT_NUMBER.toByte(), sequenceNumber, 0, 0, 0
+        )
+        sendRaw(command, 0, command.size)
+        var response: CcidDataBlock
+        do {
+            response = receiveDataBlockImmediate(sequenceNumber, MESSAGE_TYPE_RDR_TO_PC_SLOT_STATUS)
+        } while (response.isStatusTimeoutExtensionRequest)
+        Log.d(TAG, "CCID slot status: $response")
+        return response
+    }
 
     private fun skipAvailableInput() {
         var ignoredBytes: Int

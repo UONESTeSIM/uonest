@@ -25,6 +25,7 @@ class UnprivilegedNoEuiccPlaceholderFragment : Fragment() {
         }
         val card = ui.card(page).apply {
             gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(paddingLeft, ui.dp(20), paddingRight, ui.dp(20))
             (layoutParams as LinearLayout.LayoutParams).bottomMargin = 0
         }
         card.addView(ImageView(requireContext()).apply {

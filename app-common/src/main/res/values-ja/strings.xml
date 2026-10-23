@@ -23,6 +23,11 @@
     <string name="usb_permission">USB の権限を許可</string>
     <string name="usb_permission_needed">USB スマートカードリーダーにアクセスするには許可が必要です。</string>
     <string name="usb_failed">USB スマートカードリーダー経由で eSIM に接続できません。</string>
+    <string name="usb_no_card">リーダーは接続されていますが、カードが検出されません</string>
+    <string name="usb_card_unresponsive">リーダーは接続されていますが、読み取れるカードが検出されません。カードを挿入するか、接触状態を確認してください。</string>
+    <string name="usb_unsupported_card">対応する eSIM カードが認識されません。対応する eSIM カードを挿入してください。</string>
+    <string name="usb_read_failed">カードを読み取れませんでした。カードの接触状態とリーダーの接続を確認して、再試行してください。</string>
+    <string name="usb_detect_again">再検出</string>
     <string name="task_notification">長時間実行されるタスク</string>
     <string name="task_profile_download">eSIM プロファイルをダウンロード中です</string>
     <string name="task_profile_download_failure">eSIM プロファイルのダウンロードに失敗しました</string>

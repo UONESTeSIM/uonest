@@ -1,4 +1,4 @@
 <resources>
     <string name="empty_esim_title">暂未发现可用 eSIM</string>
-    <string name="empty_esim_description">插入兼容的 eSIM 卡或连接 USB 读卡器\n识别成功后会自动显示</string>
+    <string name="empty_esim_description">卡槽兼容，请插入兼容的eSIM卡</string>
 </resources>

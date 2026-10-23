@@ -1,10 +1,11 @@
 package im.angry.openeuicc.core
 
 import android.content.Context
-import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.telephony.SubscriptionManager
 import android.util.Log
+import im.angry.openeuicc.core.EuiccChannelManager.UsbChannelOpenResult
+import im.angry.openeuicc.core.usb.UsbCardFailure
 import im.angry.openeuicc.core.usb.UsbCcidContext
 import im.angry.openeuicc.core.usb.interfaces
 import im.angry.openeuicc.core.usb.smartCard
@@ -33,6 +34,9 @@ open class DefaultEuiccChannelManager(
     private val channelCache = mutableListOf<EuiccChannel>()
 
     private var usbChannels = mutableListOf<EuiccChannel>()
+    private val usbLock = Mutex()
+    private var lastUsbResult: UsbChannelOpenResult? = null
+    private var usbConnectionId = 0L
 
     private val lock = Mutex()
 
@@ -250,12 +254,12 @@ open class DefaultEuiccChannelManager(
         portId: Int,
         seId: EuiccChannel.SecureElementId,
         fn: suspend (EuiccChannel) -> R
-    ): R {
+    ): R = withUsbLock(physicalSlotId) {
         val channel = findEuiccChannelsByPort(physicalSlotId, portId)?.find { it.seId == seId }
             ?: throw EuiccChannelManager.EuiccChannelNotFoundException()
         val wrapper = EuiccChannelWrapper(channel)
         try {
-            return withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 fn(wrapper)
             }
         } finally {
@@ -267,18 +271,21 @@ open class DefaultEuiccChannelManager(
         logicalSlotId: Int,
         seId: EuiccChannel.SecureElementId,
         fn: suspend (EuiccChannel) -> R
-    ): R {
+    ): R = withUsbLock(logicalSlotId) {
         val channel = findEuiccChannelByLogicalSlot(logicalSlotId, seId)
             ?: throw EuiccChannelManager.EuiccChannelNotFoundException()
         val wrapper = EuiccChannelWrapper(channel)
         try {
-            return withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 fn(wrapper)
             }
         } finally {
             wrapper.invalidateWrapper()
         }
     }
+
+    private suspend fun <R> withUsbLock(slotId: Int, block: suspend () -> R): R =
+        if (slotId == EuiccChannelManager.USB_CHANNEL_ID) usbLock.withLock { block() } else block()
 
     override suspend fun waitForReconnect(physicalSlotId: Int, portId: Int, timeoutMillis: Long) {
         val numChannelsBefore = if (physicalSlotId == EuiccChannelManager.USB_CHANNEL_ID) {
@@ -346,7 +353,7 @@ open class DefaultEuiccChannelManager(
 
     override fun flowAllOpenEuiccPorts(): Flow<Pair<Int, Int>> =
         merge(flowInternalEuiccPorts(), flow {
-            if (tryOpenUsbEuiccChannel().second) {
+            if (tryOpenUsbEuiccChannel().canOpen) {
                 emit(Pair(EuiccChannelManager.USB_CHANNEL_ID, 0))
             }
         })
@@ -360,54 +367,91 @@ open class DefaultEuiccChannelManager(
         }
     }
 
-    override suspend fun tryOpenUsbEuiccChannel(): Pair<UsbDevice?, Boolean> =
+    override suspend fun tryOpenUsbEuiccChannel(): UsbChannelOpenResult =
         withContext(Dispatchers.IO) {
-            var candidate: UsbDevice? = null
-            usbManager.deviceList.values.forEach { device ->
-                Log.i(
-                    TAG,
-                    "Scanning USB device ${device.vendorId.toUInt().toString(16)}:${
-                        device.productId.toUInt().toString(16)
-                    }"
-                )
-                val iface = device.interfaces.smartCard ?: return@forEach
-                candidate = device
-                // If we don't have permission, tell UI code that we found a candidate device, but we
-                // need permission to be able to do anything with it
-                if (!usbManager.hasPermission(device)) return@withContext Pair(device, false)
-                Log.i(
-                    TAG,
-                    "Found CCID interface on ${device.deviceId}:${device.vendorId}, and has permission; trying to open channel"
-                )
+            usbLock.withLock {
+                openUsbChannel().also { lastUsbResult = it }
+            }
+        }
 
-                val ccidCtx =
-                    UsbCcidContext.createFromUsbDevice(context, device, iface) ?: return@forEach
+    override suspend fun pollUsbCard(): UsbChannelOpenResult = withContext(Dispatchers.IO) {
+        usbLock.withLock {
+            val previous = lastUsbResult
+            val device = previous?.device
+            if (previous?.canOpen == true && device != null &&
+                usbManager.deviceList.containsKey(device.deviceName) && usbManager.hasPermission(device) &&
+                usbChannels.isNotEmpty()) {
+                // EID is read from the card, not cached. Do not reset a healthy channel
+                // or rely on GetSlotStatus: some readers report presence even when empty.
+                val identity = runCatching { usbChannels.joinToString(":") { it.lpa.eID } }.getOrNull()
+                if (identity != null && identity == previous.cardIdentity) return@withLock previous
+            }
+            openUsbChannel().also { lastUsbResult = it }
+        }
+    }
 
-                try {
-                    val channels = tryOpenChannelWithKnownAids { isdrAid, seId ->
-                        euiccChannelFactory.tryOpenUsbEuiccChannel(ccidCtx, isdrAid, seId)
-                    }
-                    if (channels.isNotEmpty() && channels[0].valid) {
-                        ccidCtx.allowDisconnect = true
-                        usbChannels.clear()
-                        usbChannels.addAll(channels)
-                        return@withContext Pair(device, true)
-                    }
-                } catch (e: Exception) {
-                    // Ignored -- skip forward
-                    e.printStackTrace()
+    private suspend fun openUsbChannel(): UsbChannelOpenResult {
+        usbChannels.forEach { runCatching { it.close() } }
+        usbChannels.clear()
+        var result = UsbChannelOpenResult(null, false)
+        usbManager.deviceList.values.forEach { device ->
+            Log.i(
+                TAG,
+                "Scanning USB device ${device.vendorId.toUInt().toString(16)}:${
+                    device.productId.toUInt().toString(16)
+                }"
+            )
+            val iface = device.interfaces.smartCard ?: return@forEach
+            result = UsbChannelOpenResult(device, false, UsbCardFailure.READ_FAILED)
+            // If we don't have permission, tell UI code that we found a candidate device, but we
+            // need permission to be able to do anything with it
+            if (!usbManager.hasPermission(device)) return UsbChannelOpenResult(device, false)
+            Log.i(
+                TAG,
+                "Found CCID interface on ${device.deviceId}:${device.vendorId}, and has permission; trying to open channel"
+            )
+
+            val ccidCtx =
+                UsbCcidContext.createFromUsbDevice(context, device, iface) ?: return@forEach
+
+            var channels = emptyList<EuiccChannel>()
+            try {
+                // Activation is independent of AID. Fail once for an empty/unresponsive
+                // reader instead of powering it up again for every configured AID.
+                ccidCtx.connect()
+                channels = tryOpenChannelWithKnownAids { isdrAid, seId ->
+                    euiccChannelFactory.tryOpenUsbEuiccChannel(ccidCtx, isdrAid, seId)
                 }
-
+                if (channels.isNotEmpty() && channels[0].valid) {
+                    val identity = channels.joinToString(":") { it.lpa.eID }
+                    ccidCtx.allowDisconnect = true
+                    usbChannels.clear()
+                    usbChannels.addAll(channels)
+                    return UsbChannelOpenResult(device, true,
+                        cardIdentity = identity,
+                        connectionId = ++usbConnectionId)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                channels.forEach { runCatching { it.close() } }
                 ccidCtx.allowDisconnect = true
                 ccidCtx.disconnect()
-
-                Log.i(
-                    TAG,
-                    "No valid eUICC channel found on USB device ${device.deviceId}:${device.vendorId}"
-                )
+                throw e
+            } catch (e: Exception) {
+                Log.d(TAG, "USB card detection failed: ${ccidCtx.cardProbe.result}: $e")
             }
-            return@withContext Pair(candidate, false)
+
+            result = UsbChannelOpenResult(device, false, ccidCtx.cardProbe.result)
+            channels.forEach { runCatching { it.close() } }
+            ccidCtx.allowDisconnect = true
+            ccidCtx.disconnect()
+
+            Log.i(
+                TAG,
+                "No valid eUICC channel found on USB device ${device.deviceId}:${device.vendorId}"
+            )
         }
+        return result
+    }
 
     override fun invalidate() {
         for (channel in channelCache) {

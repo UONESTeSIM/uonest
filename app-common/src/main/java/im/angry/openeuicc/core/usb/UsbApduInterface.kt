@@ -68,7 +68,7 @@ class UsbApduInterface(
         }
     }
 
-    override fun connect() {
+    override fun connect() = ccidCtx.cardProbe.track {
         ccidCtx.connect()
 
         if (ccidCtx.useTpdu) {
@@ -105,6 +105,7 @@ class UsbApduInterface(
             le = null,
         )
         transmitApduByChannel(terminalCapabilities, 0)
+        Unit
     }
 
     override fun disconnect() = ccidCtx.disconnect()
@@ -120,6 +121,7 @@ class UsbApduInterface(
             return -1
         }
 
+        ccidCtx.cardProbe.recordOpenChannelResponse(resp)
         if (!isSuccessResponse(resp)) {
             Log.d(TAG, "OPEN LOGICAL CHANNEL failed: ${resp.encodeHex()}")
             return -1
@@ -132,6 +134,7 @@ class UsbApduInterface(
         // Then, select AID
         val selectAid = selectByDfCmd(aid, channelId.toByte())
         val selectAidResp = transmitApduByChannel(selectAid, channelId.toByte())
+        ccidCtx.cardProbe.recordSelectResponse(selectAidResp)
 
         if (!isSuccessResponse(selectAidResp)) {
             Log.d(TAG, "Select DF failed : ${selectAidResp.encodeHex()}")
@@ -192,7 +195,7 @@ class UsbApduInterface(
     private fun selectByDfCmd(aid: ByteArray, channel: Byte) =
         buildCmd(channel, 0xA4.toByte(), 0x04, 0x00, aid, null)
 
-    private fun transmitApduByChannel(tx: ByteArray, channel: Byte): ByteArray {
+    private fun transmitApduByChannel(tx: ByteArray, channel: Byte): ByteArray = ccidCtx.cardProbe.track {
         val realTx = tx.copyOf()
         // OR the channel mask into the CLA byte
         realTx[0] = ((realTx[0].toInt() and 0xFC) or channel.toInt()).toByte()
@@ -227,6 +230,6 @@ class UsbApduInterface(
             } while (sw1 == 0x61)
         }
 
-        return resp
+        resp
     }
 }

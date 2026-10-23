@@ -16,7 +16,7 @@ import im.angry.openeuicc.common.R
 
 /** The reader's permission and connection states share one card, including in the debug preview. */
 class UsbReaderStatusView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : ScrollView(context, attrs) {
-    enum class State { LOADING, PERMISSION, FAILURE }
+    enum class State { LOADING, PERMISSION, NO_CARD, CARD_UNRESPONSIVE, UNSUPPORTED_CARD, FAILURE }
 
     private val ui = MinimalUi(context, glassCards = true)
     private val column = ui.column().apply {
@@ -27,6 +27,7 @@ class UsbReaderStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
     private val card = ui.card(column).apply {
         gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(paddingLeft, ui.dp(20), paddingRight, ui.dp(20))
         (layoutParams as LinearLayout.LayoutParams).bottomMargin = 0
     }
     private val icon = ImageView(context).apply {
@@ -47,7 +48,11 @@ class UsbReaderStatusView @JvmOverloads constructor(context: Context, attrs: Att
     var onRetry: (() -> Unit)? = null
     var onGrantPermission: (() -> Unit)? = null
     private val grant = ui.button(card, context.getString(R.string.usb_permission)) {
-        if (state == State.FAILURE) onRetry?.invoke() else onGrantPermission?.invoke()
+        when (state) {
+            State.PERMISSION -> onGrantPermission?.invoke()
+            State.NO_CARD, State.CARD_UNRESPONSIVE, State.UNSUPPORTED_CARD, State.FAILURE -> onRetry?.invoke()
+            State.LOADING -> Unit
+        }
     }.apply {
         id = R.id.usb_grant_permission
         textSize = 14f
@@ -68,7 +73,7 @@ class UsbReaderStatusView @JvmOverloads constructor(context: Context, attrs: Att
         clipChildren = false
         addView(column, LayoutParams(-1, -1))
         card.addView(icon, 0, LinearLayout.LayoutParams(ui.dp(32), ui.dp(32)).apply {
-            topMargin = ui.dp(8); bottomMargin = ui.dp(12)
+            bottomMargin = ui.dp(12)
         })
         card.addView(title, 1, LinearLayout.LayoutParams(-1, -2))
         card.addView(detail, 2, LinearLayout.LayoutParams(-1, -2).apply { topMargin = ui.dp(8); bottomMargin = ui.dp(8) })
@@ -101,13 +106,23 @@ class UsbReaderStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     fun showState(state: State) {
         this.state = state
-        grant.setText(if (state == State.FAILURE) R.string.usb_retry else R.string.usb_permission)
+        grant.setText(when (state) {
+            State.NO_CARD, State.CARD_UNRESPONSIVE, State.UNSUPPORTED_CARD, State.FAILURE -> R.string.usb_detect_again
+            else -> R.string.usb_permission
+        })
         card.visibility = if (state == State.LOADING) View.GONE else View.VISIBLE
         loading.visibility = if (state == State.LOADING) View.VISIBLE else View.GONE
         grant.visibility = if (state != State.LOADING) View.VISIBLE else View.GONE
         grant.isEnabled = state != State.LOADING
-        detail.setText(if (state == State.FAILURE) R.string.usb_failed else R.string.usb_permission_needed)
+        detail.setText(when (state) {
+            State.NO_CARD -> R.string.usb_no_card
+            State.CARD_UNRESPONSIVE -> R.string.usb_card_unresponsive
+            State.UNSUPPORTED_CARD -> R.string.usb_unsupported_card
+            State.FAILURE -> R.string.usb_read_failed
+            else -> R.string.usb_permission_needed
+        })
         icon.imageTintList = ColorStateList.valueOf(ui.color(
-            if (state == State.FAILURE) R.color.minimal_secondary else R.color.minimal_blue))
+            if (state == State.FAILURE || state == State.UNSUPPORTED_CARD)
+                R.color.minimal_secondary else R.color.minimal_blue))
     }
 }

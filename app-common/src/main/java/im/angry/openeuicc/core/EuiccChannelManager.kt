@@ -1,6 +1,7 @@
 package im.angry.openeuicc.core
 
 import android.hardware.usb.UsbDevice
+import im.angry.openeuicc.core.usb.UsbCardFailure
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -48,14 +49,21 @@ interface EuiccChannelManager {
     /**
      * Scan all possible USB devices for CCID readers that may contain eUICC cards.
      * If found, try to open it for access, and add it to the internal EuiccChannel cache
-     * as a "port" with id 99. When user interaction is required to obtain permission
-     * to interact with the device, the second return value will be false.
-     *
-     * Returns (usbDevice, canOpen). canOpen is false if either (1) no usb reader is found;
-     * or (2) usb reader is found, but user interaction is required for access;
-     * or (3) usb reader is found, but we are unable to open ISD-R.
+     * as a "port" with id 99. A failure describes the card probe when permission was
+     * granted. No device or missing permission leaves failure null.
      */
-    suspend fun tryOpenUsbEuiccChannel(): Pair<UsbDevice?, Boolean>
+    suspend fun tryOpenUsbEuiccChannel(): UsbChannelOpenResult
+
+    /** Reuse a responsive USB card; otherwise detect insertion, removal or replacement. */
+    suspend fun pollUsbCard(): UsbChannelOpenResult = tryOpenUsbEuiccChannel()
+
+    data class UsbChannelOpenResult(
+        val device: UsbDevice?,
+        val canOpen: Boolean,
+        val failure: UsbCardFailure? = null,
+        val cardIdentity: String? = null,
+        val connectionId: Long = 0
+    )
 
     /**
      * Wait for a slot + port to reconnect (i.e. become valid again)

@@ -18,7 +18,8 @@
         android:elevation="5dp"
         android:outlineAmbientShadowColor="@color/minimal_card_shadow"
         android:outlineSpotShadowColor="@color/minimal_card_shadow"
-        android:padding="12dp">
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="20dp">
 
         <ImageView
             android:layout_width="30dp"

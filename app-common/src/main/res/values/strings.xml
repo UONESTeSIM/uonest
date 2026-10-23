@@ -38,6 +38,11 @@
     <string name="usb_permission">Grant USB permission</string>
     <string name="usb_permission_needed">Permission is needed to access the USB smart card reader.</string>
     <string name="usb_failed">Cannot connect to eSIM via a USB smart card reader.</string>
+    <string name="usb_no_card">Reader connected, no card detected</string>
+    <string name="usb_card_unresponsive">Reader connected, no readable card detected. Insert a card or check the card contacts.</string>
+    <string name="usb_unsupported_card">No supported eSIM card detected. Please insert a supported eSIM card.</string>
+    <string name="usb_read_failed">Failed to read the card. Check the card and reader connection, then try again.</string>
+    <string name="usb_detect_again">Detect again</string>
 
     <string name="task_notification">Long-running Tasks</string>
     <string name="task_profile_download">Downloading eSIM profile</string>

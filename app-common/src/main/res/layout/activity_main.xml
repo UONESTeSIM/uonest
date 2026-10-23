@@ -10,7 +10,7 @@
         android:id="@+id/main_tabs_container"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:padding="4dp"
+        android:padding="3dp"
         android:clipToPadding="false"
         android:background="@drawable/minimal_tabs_background"
         android:elevation="2dp"

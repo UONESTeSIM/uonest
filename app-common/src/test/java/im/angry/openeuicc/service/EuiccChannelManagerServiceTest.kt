@@ -11,6 +11,7 @@ import im.angry.openeuicc.testutil.TestOpenEuiccApplication
 import im.angry.openeuicc.testutil.awaitMainLooper
 import android.os.Looper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -193,5 +194,44 @@ class EuiccChannelManagerServiceTest {
         // callback result, not an exception).
         val done = awaitTaskDone(handle)
         assertNull(done.error)
+    }
+
+    @Test
+    fun `USB polling yields to downloads and cannot reopen a reader while the task is running`() = runBlocking {
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        var polls = 0
+        val base = MockEuiccChannelManager(MockEuiccChannel(1, 2, lpa))
+        TestOpenEuiccApplication.mockEuiccChannelManager = object : EuiccChannelManager by base {
+            override suspend fun pollUsbCard(): EuiccChannelManager.UsbChannelOpenResult {
+                polls++
+                if (polls == 1) {
+                    entered.complete(Unit)
+                    release.await()
+                }
+                return EuiccChannelManager.UsbChannelOpenResult(null, false)
+            }
+        }
+        service = Robolectric.buildService(EuiccChannelManagerService::class.java).get()
+        val probe = async(Dispatchers.Default) { service.pollUsbCard() }
+        entered.await()
+        val handle = service.launchProfileDownloadTask(1, 2, seId, input)
+        startService()
+        try {
+            assertFalse("A new download must wait for an in-flight probe", lpa.downloadStarted.isCompleted)
+            assertNull("A reserved foreground task prevents another probe", service.pollUsbCard())
+            release.complete(Unit)
+            probe.await()
+            awaitMainLooper { lpa.downloadStarted.isCompleted }
+            assertNull("Do not probe while download is waiting for confirmation", service.pollUsbCard())
+            assertEquals(1, polls)
+            handle.backChannel.send(false)
+            assertNull(awaitTaskDone(handle).error)
+            assertNotNull(service.pollUsbCard())
+            assertEquals(2, polls)
+        } finally {
+            release.complete(Unit)
+            handle.backChannel.trySend(false)
+        }
     }
 }

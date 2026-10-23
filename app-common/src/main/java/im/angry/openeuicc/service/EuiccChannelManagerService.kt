@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
@@ -101,6 +103,16 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
         appContainer.euiccChannelManagerFactory.createEuiccChannelManager(this)
     }
     val euiccChannelManager: EuiccChannelManager by euiccChannelManagerDelegate
+    private val usbDetectionLock = Mutex()
+
+    /** Idle checks and foreground operations must never use/reopen the reader concurrently. */
+    suspend fun pollUsbCard(): EuiccChannelManager.UsbChannelOpenResult? {
+        if (foregroundTaskState.value != ForegroundTaskState.Idle) return null
+        return usbDetectionLock.withLock {
+            if (foregroundTaskState.value != ForegroundTaskState.Idle) return@withLock null
+            euiccChannelManager.pollUsbCard()
+        }
+    }
 
     private val wakeLock: PowerManager.WakeLock by lazy {
         (getSystemService(POWER_SERVICE) as PowerManager).run {
@@ -313,7 +325,9 @@ open class EuiccChannelManagerService : LifecycleService(), OpenEuiccContextMark
 
             try {
                 withContext(Dispatchers.IO + NonCancellable) { // Any LPA-related task must always complete
-                    this@EuiccChannelManagerService.task(backChannel)
+                    usbDetectionLock.withLock {
+                        this@EuiccChannelManagerService.task(backChannel)
+                    }
                 }
                 // This update will be sent by the subscriber (as shown below)
                 foregroundTaskState.value = ForegroundTaskState.Done(null)

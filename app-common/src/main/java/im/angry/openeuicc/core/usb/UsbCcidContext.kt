@@ -6,6 +6,7 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
+import android.util.Log
 import im.angry.openeuicc.util.preferenceRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -35,7 +36,10 @@ class UsbCcidContext private constructor(
             if (bulkIn == null || bulkOut == null) return@runCatching null
             val conn = context.getSystemService(UsbManager::class.java).openDevice(usbDevice)
                 ?: return@runCatching null
-            if (!conn.claimInterface(usbInterface, true)) return@runCatching null
+            if (!conn.claimInterface(usbInterface, true)) {
+                conn.close()
+                return@runCatching null
+            }
 
             val forceTpduMode = runBlocking { context.preferenceRepository.forceTpduModeFlow.first() }
             val useTpdu = forceTpduMode || isKnownTpduReader(usbDevice.vendorId, usbDevice.productId)
@@ -55,13 +59,14 @@ class UsbCcidContext private constructor(
      * This allows the separation of device disconnection from lpac-jni's APDU interface.
      */
     var allowDisconnect = false
+    val cardProbe = UsbCardProbe()
     private var initialized = false
     lateinit var transceiver: UsbCcidTransceiver
     var atr: ByteArray? = null
 
-    fun connect() {
+    fun connect() = cardProbe.track {
         if (initialized) {
-            return
+            return@track
         }
 
         val ccidDescription = UsbCcidDescription.fromRawDescriptors(conn.rawDescriptors)!!
@@ -72,12 +77,25 @@ class UsbCcidContext private constructor(
 
         transceiver = UsbCcidTransceiver(conn, bulkIn, bulkOut, ccidDescription, verboseLoggingFlow)
 
+        // Some readers report inactive + ICC_MUTE on empty-slot power-on. Ask for
+        // physical presence separately; a failed/unsupported query must not imply no card.
+        val slotStatus = try {
+            transceiver.getSlotStatus()
+        } catch (e: Exception) {
+            Log.w("UsbCcidContext", "Could not query slot status; trying card activation", e)
+            null
+        }
+        if (slotStatus != null && UsbCardProbe.isCardAbsent(slotStatus)) {
+            throw UsbCcidTransceiver.UsbCcidErrorException("No card present", slotStatus)
+        }
+
         try {
             // 6.1.1.1 PC_to_RDR_IccPowerOn (Page 20 of 40)
             // https://www.usb.org/sites/default/files/DWG_Smart-Card_USB-ICC_ICCD_rev10.pdf
             atr = transceiver.iccPowerOn().data
         } catch (e: Exception) {
-            e.printStackTrace()
+            cardProbe.recordActivationFailure(e)
+            Log.d("UsbCcidContext", "Card activation failed: $e")
             throw e
         }
 
@@ -85,9 +103,10 @@ class UsbCcidContext private constructor(
     }
 
     fun disconnect() {
-        if (initialized && allowDisconnect) {
+        if (allowDisconnect) {
             conn.close()
             atr = null
+            initialized = false
         }
     }
 }

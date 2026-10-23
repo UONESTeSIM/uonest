@@ -177,8 +177,8 @@ class MockEuiccChannelManager(val channel: EuiccChannel) : EuiccChannelManager {
     override fun flowEuiccSecureElements(slotId: Int, portId: Int): Flow<EuiccChannel.SecureElementId> =
         flowOf(channel.seId)
 
-    override suspend fun tryOpenUsbEuiccChannel(): Pair<android.hardware.usb.UsbDevice?, Boolean> =
-        null to true
+    override suspend fun tryOpenUsbEuiccChannel() =
+        EuiccChannelManager.UsbChannelOpenResult(null, true)
 
     override suspend fun waitForReconnect(physicalSlotId: Int, portId: Int, timeoutMillis: Long) {}
 
