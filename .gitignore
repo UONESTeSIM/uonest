@@ -16,6 +16,9 @@
 
 /artifacts/
 
+# Local website project is maintained separately from the Android repository.
+/website/
+
 # Generated module outputs and signing material
 /*/build/
 /libs/*/build/
