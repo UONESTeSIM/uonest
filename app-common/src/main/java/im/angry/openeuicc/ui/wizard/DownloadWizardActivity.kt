@@ -228,6 +228,12 @@ class DownloadWizardActivity : BaseEuiccAccessActivity() {
         }
     }
 
+    internal fun continueAfterPowerNotice() {
+        if (currentFragment is DownloadWizardLowPowerFragment && nextButton.isEnabled) {
+            onNextPressed()
+        }
+    }
+
     private fun onNextPressed() {
         hideIme()
 
@@ -336,7 +342,8 @@ class DownloadWizardActivity : BaseEuiccAccessActivity() {
     private fun refreshButtons() {
         requireViewById<View>(R.id.download_wizard_navigation).visibility =
             if (currentFragment is DownloadWizardProgressFragment ||
-                currentFragment is DownloadWizardConfirmationFragment) View.GONE else View.VISIBLE
+                currentFragment is DownloadWizardConfirmationFragment ||
+                currentFragment is DownloadWizardLowPowerFragment) View.GONE else View.VISIBLE
         ViewCompat.requestApplyInsets(window.decorView.rootView)
         currentFragment?.let {
             nextButton.setText(it.nextButtonTextRes)

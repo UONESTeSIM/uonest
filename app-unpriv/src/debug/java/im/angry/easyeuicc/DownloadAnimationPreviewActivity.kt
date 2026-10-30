@@ -32,6 +32,10 @@ class DownloadAnimationPreviewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (intent.getBooleanExtra("preview_low_power", false)) {
+            showPowerPreview()
+            return
+        }
         if (intent.getBooleanExtra("preview_confirmation", false)) {
             showConfirmationPreview(savedInstanceState?.getString("confirmation").orEmpty())
             return
@@ -93,6 +97,35 @@ class DownloadAnimationPreviewActivity : AppCompatActivity() {
 
     private var confirmationForm: im.angry.openeuicc.ui.minimal.ConfirmationCodeView? = null
     private var confirmationDialog: im.angry.openeuicc.ui.minimal.ProfileEditorDialog? = null
+
+    private fun showPowerPreview() {
+        val ui = MinimalUi(this)
+        setContentView(FrameLayout(this).apply {
+            addView(ui.text("低电量弹窗预览 · 不执行实际下载", 13f, true).apply {
+                gravity = Gravity.CENTER
+            }, FrameLayout.LayoutParams(-1, ui.dp(80)).apply { topMargin = ui.dp(48) })
+        })
+        val dialog = im.angry.openeuicc.ui.minimal.ProfileEditorDialog(this)
+        val form = im.angry.openeuicc.ui.minimal.DownloadPowerNoticeView(this,
+            R.string.download_low_power_download,
+            onContinue = { dialog.dismiss(); finish() },
+            onCancel = { dialog.cancel() })
+        val charging = intent.getBooleanExtra("preview_charging", false)
+        val saver = intent.getBooleanExtra("preview_saver", false)
+        form.showNotice(if (saver) R.string.download_low_power_saver_title else R.string.download_wizard_low_power,
+            getString(if (charging) R.string.download_low_power_charging_level else R.string.download_low_power_level,
+                if (saver) 80 else 15),
+            when {
+                saver -> R.string.download_low_power_saver_content
+                charging -> R.string.download_low_power_charging_content
+                else -> R.string.download_wizard_low_power_content
+            })
+        confirmationDialog = dialog
+        dialog.setContentView(ui.scroll(form))
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.setOnCancelListener { finish() }
+        dialog.show()
+    }
 
     private fun showConfirmationPreview(initialCode: String) {
         val ui = MinimalUi(this)
