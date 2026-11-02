@@ -72,7 +72,9 @@ class UsbCcidReaderPermissionFragment : Fragment(), OpenEuiccContextMarker {
 
     private fun loadUsbChannel() {
         if (loadJob?.isActive == true) return
-        loadJob = viewLifecycleOwner.lifecycleScope.launch { tryLoadUsbChannel() }
+        // onResume can run inside ViewPager's layout. Queue even an immediate card
+        // result so replacing the page cannot re-enter RecyclerView layout.
+        loadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) { tryLoadUsbChannel() }
     }
 
     override fun onResume() {
@@ -155,7 +157,8 @@ class UsbCcidReaderPermissionFragment : Fragment(), OpenEuiccContextMarker {
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.w("UsbCcidReader", "Could not load USB card", e)
             statusView.showState(State.FAILURE)
         }
     }

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.hardware.usb.UsbManager
 import android.os.Looper
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import im.angry.openeuicc.common.R
 import im.angry.openeuicc.core.EuiccChannel
@@ -34,6 +35,8 @@ class UsbCardAutoRefreshTest {
         val device = usbTestDevice()
         var result = EuiccChannelManager.UsbChannelOpenResult(device, false, UsbCardFailure.CARD_UNRESPONSIVE)
         var polls = 0
+        var pollsDuringLayout = 0
+        var readerPager: RecyclerView? = null
         val base = MockEuiccChannelManager(MockEuiccChannel(0, 0))
         val manager = object : EuiccChannelManager by base {
             override fun flowInternalEuiccPorts() = flow {
@@ -43,6 +46,7 @@ class UsbCardAutoRefreshTest {
             }
             override suspend fun pollUsbCard(): EuiccChannelManager.UsbChannelOpenResult {
                 polls++
+                if (readerPager?.isComputingLayout == true) pollsDuringLayout++
                 return result
             }
             override suspend fun <R> withEuiccChannel(physicalSlotId: Int, portId: Int,
@@ -64,6 +68,7 @@ class UsbCardAutoRefreshTest {
         controller.get().setTheme(R.style.Theme_OpenEUICC)
         val activity = controller.setup().get()
         val pager = activity.findViewById<ViewPager2>(R.id.view_pager)
+        readerPager = pager.getChildAt(0) as RecyclerView
         fun usbStatus() = activity.supportFragmentManager.fragments
             .filterIsInstance<UsbCcidReaderPermissionFragment>().firstOrNull { it.isResumed }
         fun usbProfiles() = activity.supportFragmentManager.fragments
@@ -83,12 +88,16 @@ class UsbCardAutoRefreshTest {
                         "text=${it.view?.findViewById<TextView>(R.id.usb_reader_text)?.text})"
                 }
                 throw AssertionError("Timed out waiting for $stage (polls=$polls, " +
-                    "page=${pager.currentItem}, fragments=$fragments)", e)
+                    "page=${pager.currentItem}, fragments=$fragments)",
+                    org.robolectric.shadows.ShadowLog.getLogsForTag("UsbCcidReader")
+                        .lastOrNull()?.throwable ?: e)
             }
         }
         try {
             awaitUi("initial reader status") { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
                 activity.getString(R.string.usb_card_unresponsive) }
+            assertEquals("USB discovery must start after pager layout so an immediate result can replace the page",
+                0, pollsDuringLayout)
             assertEquals(3, pager.adapter!!.itemCount)
             val emptyPage = pager.adapter!!.getItemId(2)
             val count = polls
