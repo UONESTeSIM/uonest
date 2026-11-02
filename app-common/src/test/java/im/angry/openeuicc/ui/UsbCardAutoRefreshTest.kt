@@ -78,7 +78,12 @@ class UsbCardAutoRefreshTest {
                     condition()
                 }
             } catch (e: TimeoutCancellationException) {
-                throw AssertionError("Timed out waiting for $stage (polls=$polls, page=${pager.currentItem})", e)
+                val fragments = activity.supportFragmentManager.fragments.joinToString {
+                    "${it.javaClass.simpleName}(resumed=${it.isResumed}, " +
+                        "text=${it.view?.findViewById<TextView>(R.id.usb_reader_text)?.text})"
+                }
+                throw AssertionError("Timed out waiting for $stage (polls=$polls, " +
+                    "page=${pager.currentItem}, fragments=$fragments)", e)
             }
         }
         try {

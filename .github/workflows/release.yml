@@ -77,6 +77,18 @@ jobs:
           NINEESIM_KEY_PASSWORD: ${{ secrets.NINEESIM_KEY_PASSWORD }}
         run: python3 tools/ci/sign_release.py
 
+      - name: Save failed test reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: failed-test-reports
+          path: |
+            app-common/build/reports/tests/
+            app-common/build/test-results/
+            app-unpriv/build/reports/tests/
+            app-unpriv/build/test-results/
+          retention-days: 7
+
       - name: Save verified APK and checksum
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

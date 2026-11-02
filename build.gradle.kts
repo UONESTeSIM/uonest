@@ -17,6 +17,7 @@ subprojects {
     tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
         testLogging {
             events("passed", "skipped", "failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
             // Uncomment to also capture each test's stdout/stderr:
             // showStandardStreams = true
         }
