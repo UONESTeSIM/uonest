@@ -12,6 +12,10 @@ import im.angry.openeuicc.core.EuiccChannelManager
 import im.angry.openeuicc.core.usb.UsbCardFailure
 import im.angry.openeuicc.service.EuiccChannelManagerService
 import im.angry.openeuicc.testutil.*
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
@@ -32,6 +36,11 @@ class UsbCardAutoRefreshTest {
         var polls = 0
         val base = MockEuiccChannelManager(MockEuiccChannel(0, 0))
         val manager = object : EuiccChannelManager by base {
+            override fun flowInternalEuiccPorts() = flow {
+                // Discovery can finish after a polling tick, as it does with real I/O.
+                delay(100)
+                emitAll(base.flowInternalEuiccPorts())
+            }
             override suspend fun pollUsbCard(): EuiccChannelManager.UsbChannelOpenResult {
                 polls++
                 return result
@@ -60,39 +69,51 @@ class UsbCardAutoRefreshTest {
         fun usbProfiles() = activity.supportFragmentManager.fragments
             .filterIsInstance<EuiccManagementFragment>().firstOrNull { it.isResumed && pager.currentItem == 2 }
         fun tick() = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(1600))
+        suspend fun awaitUi(stage: String, condition: () -> Boolean) {
+            try {
+                awaitMainLooper {
+                    // idle() alone cannot run future frames or a poll scheduled after I/O.
+                    // Advance virtual time while still allowing background work to finish.
+                    shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(16))
+                    condition()
+                }
+            } catch (e: TimeoutCancellationException) {
+                throw AssertionError("Timed out waiting for $stage (polls=$polls, page=${pager.currentItem})", e)
+            }
+        }
         try {
-            awaitMainLooper { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
+            awaitUi("initial reader status") { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
                 activity.getString(R.string.usb_card_unresponsive) }
             assertEquals(3, pager.adapter!!.itemCount)
             val emptyPage = pager.adapter!!.getItemId(2)
             val count = polls
             tick()
-            awaitMainLooper { polls > count }
+            awaitUi("the next unchanged poll") { polls > count }
             assertEquals("Unchanged state must preserve its page", emptyPage, pager.adapter!!.getItemId(2))
 
             result = EuiccChannelManager.UsbChannelOpenResult(device, true, cardIdentity = "card-a", connectionId = 1)
             tick()
-            awaitMainLooper { usbProfiles() != null }
+            awaitUi("the first card's profile page") { usbProfiles() != null }
             val profilePage = pager.adapter!!.getItemId(2)
             tick()
             assertEquals("Healthy cards must not recreate their list every poll", profilePage, pager.adapter!!.getItemId(2))
 
             result = EuiccChannelManager.UsbChannelOpenResult(device, false, UsbCardFailure.CARD_UNRESPONSIVE)
             tick()
-            awaitMainLooper { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
+            awaitUi("card removal status") { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
                 activity.getString(R.string.usb_card_unresponsive) }
             assertNull("Removed cards must not leave their old profile list visible", usbProfiles())
 
             result = EuiccChannelManager.UsbChannelOpenResult(device, true, cardIdentity = "card-b", connectionId = 2)
             tick()
-            awaitMainLooper { usbProfiles() != null }
+            awaitUi("the replacement card's profile page") { usbProfiles() != null }
             assertNotEquals(profilePage, pager.adapter!!.getItemId(2))
 
             pager.setCurrentItem(1, false)
             val beforeRemoval = pager.adapter!!.getItemId(2)
             result = EuiccChannelManager.UsbChannelOpenResult(device, false, UsbCardFailure.UNSUPPORTED_CARD)
             tick()
-            awaitMainLooper { pager.adapter!!.getItemId(2) != beforeRemoval }
+            awaitUi("USB page replacement while a phone slot is selected") { pager.adapter!!.getItemId(2) != beforeRemoval }
             assertEquals("A USB change must not steal the selected phone slot", 1, pager.currentItem)
 
             controller.pause()
@@ -101,7 +122,7 @@ class UsbCardAutoRefreshTest {
             assertEquals("Background screens must stop polling", stoppedPolls, polls)
             controller.resume()
             pager.setCurrentItem(2, false)
-            awaitMainLooper { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
+            awaitUi("reader status after resuming") { usbStatus()?.view?.findViewById<TextView>(R.id.usb_reader_text)?.text ==
                 activity.getString(R.string.usb_unsupported_card) }
         } finally {
             controller.pause().stop().destroy()
